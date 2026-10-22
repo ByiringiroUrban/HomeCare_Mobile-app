@@ -8,6 +8,7 @@ import {
   Pressable,
 } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
+import { Ionicons } from '@expo/vector-icons';
 import { THEME } from '../../constants/theme';
 import { useAuthStore } from '../../stores/authStore';
 import { doctorService } from '../../services/api';
@@ -43,7 +44,9 @@ export default function DoctorPatientsScreen() {
 
       {assignedPatients.length === 0 ? (
         <Card style={styles.emptyCard}>
-          <Text style={styles.emptyIcon}>👥</Text>
+          <View style={styles.emptyIconCircle}>
+            <Ionicons name="people-outline" size={36} color={THEME.colors.primary} />
+          </View>
           <Text style={styles.emptyTitle}>No patients assigned yet</Text>
           <Text style={styles.emptyText}>Patients who book visits with you will appear here.</Text>
         </Card>
@@ -56,9 +59,12 @@ export default function DoctorPatientsScreen() {
               </View>
               <View style={styles.nameCol}>
                 <Text style={styles.name}>{user?.name}</Text>
-                <Text style={styles.contact}>
-                  📞 {user?.phone} • {profile?.age || 30} yrs ({profile?.gender || 'N/A'})
-                </Text>
+                <View style={styles.contactRow}>
+                  <Ionicons name="call-outline" size={13} color={THEME.colors.textSecondary} />
+                  <Text style={styles.contact}>
+                    {user?.phone} • {profile?.age || 30} yrs ({profile?.gender || 'N/A'})
+                  </Text>
+                </View>
               </View>
             </View>
 
@@ -116,9 +122,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 40,
   },
-  emptyIcon: {
-    fontSize: 38,
-    marginBottom: 8,
+  emptyIconCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: THEME.colors.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
   },
   emptyTitle: {
     fontSize: 15,
@@ -160,10 +171,15 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: THEME.colors.textPrimary,
   },
+  contactRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 2,
+  },
   contact: {
     fontSize: 12,
     color: THEME.colors.textSecondary,
-    marginTop: 1,
   },
   healthInfo: {
     backgroundColor: THEME.colors.surfaceSubtle,

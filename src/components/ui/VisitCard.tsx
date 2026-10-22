@@ -1,6 +1,6 @@
-// Reusable Visit Item Card for Patients and Doctors
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { THEME } from '../../constants/theme';
 import { VisitRequest } from '../../types/domain';
 import { Card } from './Card';
@@ -29,7 +29,9 @@ export const VisitCard: React.FC<VisitCardProps> = ({
     <Card style={styles.card} onPress={onPress}>
       <View style={styles.header}>
         <View style={styles.dateBadge}>
+          <Ionicons name="calendar-outline" size={14} color={THEME.colors.primary} />
           <Text style={styles.dateText}>{visit.scheduledDate}</Text>
+          <Ionicons name="time-outline" size={14} color={THEME.colors.primary} style={{ marginLeft: 4 }} />
           <Text style={styles.timeText}>{visit.scheduledTime}</Text>
         </View>
         <Badge status={visit.status} size="sm" />
@@ -42,7 +44,7 @@ export const VisitCard: React.FC<VisitCardProps> = ({
       </View>
 
       <View style={styles.addressRow}>
-        <Text style={styles.addressIcon}>📍</Text>
+        <Ionicons name="location-outline" size={14} color={THEME.colors.textSecondary} style={{ marginRight: 4 }} />
         <Text style={styles.addressText} numberOfLines={1}>
           {visit.visitAddress} ({visit.district})
         </Text>

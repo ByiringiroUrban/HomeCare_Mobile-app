@@ -1,7 +1,6 @@
-// Patient App Tab Layout (Home, Find Doctor, Visits, Records, Profile)
 import React from 'react';
 import { Tabs } from 'expo-router';
-import { Text } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { THEME } from '../../constants/theme';
 
 export default function PatientTabsLayout() {
@@ -36,7 +35,9 @@ export default function PatientTabsLayout() {
         options={{
           title: 'Home',
           headerShown: false,
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 18, color }}>🏠</Text>,
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? 'home' : 'home-outline'} size={size || 22} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
@@ -44,7 +45,9 @@ export default function PatientTabsLayout() {
         options={{
           title: 'Find Doctor',
           headerTitle: 'Find Medical Specialists',
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 18, color }}>🔍</Text>,
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? 'search' : 'search-outline'} size={size || 22} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
@@ -52,7 +55,9 @@ export default function PatientTabsLayout() {
         options={{
           title: 'Visits',
           headerTitle: 'My Consultations',
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 18, color }}>🗓️</Text>,
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? 'calendar' : 'calendar-outline'} size={size || 22} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
@@ -60,7 +65,13 @@ export default function PatientTabsLayout() {
         options={{
           title: 'Records',
           headerTitle: 'Medical History & Results',
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 18, color }}>📋</Text>,
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? 'document-text' : 'document-text-outline'}
+              size={size || 22}
+              color={color}
+            />
+          ),
         }}
       />
       <Tabs.Screen
@@ -68,7 +79,9 @@ export default function PatientTabsLayout() {
         options={{
           title: 'Profile',
           headerTitle: 'Medical Profile & Settings',
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 18, color }}>👤</Text>,
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? 'person' : 'person-outline'} size={size || 22} color={color} />
+          ),
         }}
       />
 

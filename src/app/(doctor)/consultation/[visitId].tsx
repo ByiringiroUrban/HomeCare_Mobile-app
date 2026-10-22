@@ -17,6 +17,7 @@ import { Card } from '../../../components/ui/Card';
 import { Button } from '../../../components/ui/Button';
 import { InputField } from '../../../components/ui/InputField';
 import { PrescriptionItem, LabSample } from '../../../types/domain';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function DoctorConsultationWorkspaceScreen() {
   const { visitId } = useLocalSearchParams<{ visitId: string }>();
@@ -260,7 +261,7 @@ export default function DoctorConsultationWorkspaceScreen() {
               <Text style={styles.rxInst}>"{p.instructions}"</Text>
             </View>
             <Pressable onPress={() => handleRemovePrescription(p.id)} style={styles.removeBtn}>
-              <Text style={styles.removeText}>✕</Text>
+              <Ionicons name="close-circle-outline" size={20} color={THEME.colors.error} />
             </Pressable>
           </View>
         ))}
@@ -310,7 +311,7 @@ export default function DoctorConsultationWorkspaceScreen() {
           onPress={() => setIsLabRequired(!isLabRequired)}
         >
           <View style={[styles.checkbox, isLabRequired && styles.checkboxActive]}>
-            {isLabRequired && <Text style={styles.checkMark}>✓</Text>}
+            {isLabRequired && <Ionicons name="checkmark" size={14} color="#FFF" />}
           </View>
           <Text style={styles.checkboxText}>Laboratory specimen tests required</Text>
         </Pressable>
@@ -328,7 +329,7 @@ export default function DoctorConsultationWorkspaceScreen() {
               onPress={() => setSampleCollected(!sampleCollected)}
             >
               <View style={[styles.checkbox, sampleCollected && styles.checkboxActive]}>
-                {sampleCollected && <Text style={styles.checkMark}>✓</Text>}
+                {sampleCollected && <Ionicons name="checkmark" size={14} color="#FFF" />}
               </View>
               <Text style={styles.checkboxText}>
                 Blood / Swab specimen collected on-site at patient residence
@@ -346,7 +347,7 @@ export default function DoctorConsultationWorkspaceScreen() {
           onPress={() => setPublishResultNow(!publishResultNow)}
         >
           <View style={[styles.checkbox, publishResultNow && styles.checkboxActive]}>
-            {publishResultNow && <Text style={styles.checkMark}>✓</Text>}
+            {publishResultNow && <Ionicons name="checkmark" size={14} color="#FFF" />}
           </View>
           <Text style={styles.checkboxText}>
             Upload and publish validated laboratory result document to patient now

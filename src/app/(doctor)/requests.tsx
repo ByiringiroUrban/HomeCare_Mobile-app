@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
+import { Ionicons } from '@expo/vector-icons';
 import { THEME } from '../../constants/theme';
 import { useAuthStore } from '../../stores/authStore';
 import { doctorService } from '../../services/api';
@@ -101,7 +102,9 @@ export default function DoctorRequestsScreen() {
 
       {pendingRequests.length === 0 ? (
         <Card style={styles.emptyCard}>
-          <Text style={styles.emptyIcon}>📬</Text>
+          <View style={styles.emptyIconCircle}>
+            <Ionicons name="mail-open-outline" size={36} color={THEME.colors.primary} />
+          </View>
           <Text style={styles.emptyTitle}>No pending visit requests</Text>
           <Text style={styles.emptyText}>New booking requests from patients will appear here immediately.</Text>
         </Card>
@@ -111,12 +114,16 @@ export default function DoctorRequestsScreen() {
             <View style={styles.reqHeader}>
               <View>
                 <Text style={styles.patientName}>{visit.patientName}</Text>
-                <Text style={styles.patientPhone}>📞 {visit.patientPhone}</Text>
+                <View style={styles.phoneRow}>
+                  <Ionicons name="call-outline" size={13} color={THEME.colors.textSecondary} />
+                  <Text style={styles.patientPhone}>{visit.patientPhone}</Text>
+                </View>
               </View>
               <Badge status={visit.status} size="sm" />
             </View>
 
             <View style={styles.timeTag}>
+              <Ionicons name="calendar-outline" size={14} color={THEME.colors.primary} style={{ marginRight: 5 }} />
               <Text style={styles.timeTagText}>
                 Requested: {visit.scheduledDate} at {visit.scheduledTime}
               </Text>
@@ -124,7 +131,7 @@ export default function DoctorRequestsScreen() {
 
             {/* Address */}
             <View style={styles.infoRow}>
-              <Text style={styles.infoIcon}>📍</Text>
+              <Ionicons name="location-outline" size={16} color={THEME.colors.primary} style={{ marginRight: 6 }} />
               <Text style={styles.infoText}>
                 {visit.visitAddress} ({visit.district})
               </Text>
@@ -285,6 +292,15 @@ const styles = StyleSheet.create({
     fontSize: 38,
     marginBottom: 8,
   },
+  emptyIconCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: THEME.colors.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+  },
   emptyTitle: {
     fontSize: 15,
     fontWeight: '700',
@@ -310,12 +326,19 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: THEME.colors.textPrimary,
   },
+  phoneRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 2,
+  },
   patientPhone: {
     fontSize: 12,
     color: THEME.colors.textSecondary,
-    marginTop: 2,
   },
   timeTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: THEME.colors.primarySoft,
     paddingHorizontal: 8,
     paddingVertical: 4,

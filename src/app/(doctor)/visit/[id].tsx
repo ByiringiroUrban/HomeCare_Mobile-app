@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
+import { Ionicons } from '@expo/vector-icons';
 import { THEME } from '../../../constants/theme';
 import { useAuthStore } from '../../../stores/authStore';
 import { patientService, doctorService } from '../../../services/api';
@@ -78,22 +79,28 @@ export default function DoctorVisitCockpitScreen() {
           <Badge status={visit.status} size="md" />
         </View>
         <Text style={styles.patientHero}>{visit.patientName}</Text>
-        <Text style={styles.scheduledInfo}>
-          🗓️ Scheduled: {visit.scheduledDate} at {visit.scheduledTime}
-        </Text>
+        <View style={styles.scheduledInfoRow}>
+          <Ionicons name="calendar-outline" size={16} color={THEME.colors.textSecondary} />
+          <Text style={styles.scheduledInfo}>
+            Scheduled: {visit.scheduledDate} at {visit.scheduledTime}
+          </Text>
+        </View>
       </View>
 
       {/* Navigation & Patient Residence Card */}
       <Card style={styles.sectionCard}>
         <Text style={styles.sectionTitle}>Residence Destination (Kigali)</Text>
-        <Text style={styles.addressText}>📍 {visit.visitAddress}</Text>
+        <View style={styles.addressRow}>
+          <Ionicons name="location-outline" size={18} color={THEME.colors.primary} style={{ marginRight: 6 }} />
+          <Text style={styles.addressText}>{visit.visitAddress}</Text>
+        </View>
         <Text style={styles.districtText}>District: {visit.district}</Text>
         {visit.accessInstructions && (
           <Text style={styles.accessText}>Access Instructions: "{visit.accessInstructions}"</Text>
         )}
 
         <Button
-          title="🚗 Open Maps Turn-by-Turn Navigation"
+          title="Open Maps Turn-by-Turn Navigation"
           variant="secondary"
           onPress={handleOpenNavigation}
           style={{ marginTop: 10 }}
@@ -156,7 +163,7 @@ export default function DoctorVisitCockpitScreen() {
 
           {['in_consultation', 'completed'].includes(visit.status) && (
             <Button
-              title="📝 Open Clinical Consultation Workspace"
+              title="Open Clinical Consultation Workspace"
               size="lg"
               onPress={() => router.push(`/(doctor)/consultation/${visit.id}` as any)}
               style={styles.workspaceBtn}
@@ -213,10 +220,15 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: THEME.colors.textPrimary,
   },
+  scheduledInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 6,
+  },
   scheduledInfo: {
     fontSize: 13,
     color: THEME.colors.textSecondary,
-    marginTop: 4,
   },
   sectionCard: {
     marginBottom: THEME.spacing.md,
@@ -226,6 +238,11 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: THEME.colors.textPrimary,
     marginBottom: 8,
+  },
+  addressRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
   },
   addressText: {
     fontSize: 13,

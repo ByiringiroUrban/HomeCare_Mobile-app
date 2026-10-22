@@ -8,6 +8,7 @@ import {
   Pressable,
 } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
+import { Ionicons } from '@expo/vector-icons';
 import { THEME } from '../../constants/theme';
 import { useAuthStore } from '../../stores/authStore';
 import { doctorService } from '../../services/api';
@@ -96,9 +97,12 @@ export default function DoctorScheduleScreen() {
             <Card key={s.id} style={styles.slotCard}>
               <View style={styles.slotInfo}>
                 <Text style={styles.slotDate}>{s.date}</Text>
-                <Text style={styles.slotTime}>
-                  ⏱️ {s.startTime} - {s.endTime}
-                </Text>
+                <View style={styles.slotTimeRow}>
+                  <Ionicons name="time-outline" size={14} color={THEME.colors.textSecondary} />
+                  <Text style={styles.slotTime}>
+                    {s.startTime} - {s.endTime}
+                  </Text>
+                </View>
                 <Text
                   style={[
                     styles.slotStatus,
@@ -240,11 +244,16 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: THEME.colors.textPrimary,
   },
+  slotTimeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 2,
+  },
   slotTime: {
     fontSize: 12,
     color: THEME.colors.primary,
     fontWeight: '600',
-    marginTop: 2,
   },
   slotStatus: {
     fontSize: 11,

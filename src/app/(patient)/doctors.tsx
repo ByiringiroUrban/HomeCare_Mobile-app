@@ -1,4 +1,3 @@
-// Specialist Discovery and Filter Screen (SRS FR-2.1, FR-2.2, FR-2.4, FR-2.5)
 import React, { useState, useMemo } from 'react';
 import {
   View,
@@ -11,6 +10,7 @@ import {
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
+import { Ionicons } from '@expo/vector-icons';
 import { THEME, APP_CONFIG } from '../../constants/theme';
 import { patientService } from '../../services/api';
 import { DoctorCard } from '../../components/ui/DoctorCard';
@@ -73,7 +73,7 @@ export default function DoctorDiscoveryScreen() {
       {/* Search Bar & Filter Toggle */}
       <View style={styles.searchContainer}>
         <View style={styles.searchBar}>
-          <Text style={styles.searchIcon}>🔍</Text>
+          <Ionicons name="search" size={17} color={THEME.colors.textMuted} style={{ marginRight: 6 }} />
           <TextInput
             style={styles.searchInput}
             placeholder="Search by doctor name, symptom or condition..."
@@ -83,7 +83,7 @@ export default function DoctorDiscoveryScreen() {
           />
           {searchQuery ? (
             <Pressable onPress={() => setSearchQuery('')}>
-              <Text style={styles.clearIcon}>✕</Text>
+              <Ionicons name="close-circle" size={16} color={THEME.colors.textMuted} />
             </Pressable>
           ) : null}
         </View>
@@ -92,8 +92,14 @@ export default function DoctorDiscoveryScreen() {
           style={[styles.filterToggleBtn, showFilters && styles.filterToggleBtnActive]}
           onPress={() => setShowFilters(!showFilters)}
         >
+          <Ionicons
+            name="options-outline"
+            size={18}
+            color={showFilters ? THEME.colors.primary : THEME.colors.textSecondary}
+            style={{ marginRight: 4 }}
+          />
           <Text style={[styles.filterToggleText, showFilters && styles.filterToggleTextActive]}>
-            ⚙️ Filters {hasActiveFilters ? '•' : ''}
+            Filters {hasActiveFilters ? '•' : ''}
           </Text>
         </Pressable>
       </View>
@@ -175,7 +181,7 @@ export default function DoctorDiscoveryScreen() {
             onPress={() => setOnlineOnly(!onlineOnly)}
           >
             <View style={[styles.checkbox, onlineOnly && styles.checkboxActive]}>
-              {onlineOnly && <Text style={styles.checkMark}>✓</Text>}
+              {onlineOnly && <Ionicons name="checkmark" size={14} color="#FFF" />}
             </View>
             <Text style={styles.switchLabel}>Show only specialists available right now</Text>
           </Pressable>
@@ -196,7 +202,9 @@ export default function DoctorDiscoveryScreen() {
         )}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyIcon}>🩺</Text>
+            <View style={styles.emptyIconCircle}>
+              <Ionicons name="medkit-outline" size={38} color={THEME.colors.primary} />
+            </View>
             <Text style={styles.emptyTitle}>No matching doctors found</Text>
             <Text style={styles.emptySubtitle}>
               Try adjusting your specialty or district filter to discover available physicians in Kigali.
@@ -393,9 +401,14 @@ const styles = StyleSheet.create({
     paddingVertical: 40,
     paddingHorizontal: 20,
   },
-  emptyIcon: {
-    fontSize: 40,
-    marginBottom: 10,
+  emptyIconCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: THEME.colors.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
   },
   emptyTitle: {
     fontSize: 16,

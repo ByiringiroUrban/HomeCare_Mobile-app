@@ -8,6 +8,7 @@ import {
   Pressable,
 } from 'react-native';
 import { router } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { THEME, APP_CONFIG } from '../../constants/theme';
 import { useAuthStore } from '../../stores/authStore';
 import { patientService } from '../../services/api';
@@ -125,9 +126,12 @@ export default function PatientProfileScreen() {
         <Text style={styles.emergencyName}>
           {patientProfile?.emergencyContact.name || 'Next of Kin'} ({patientProfile?.emergencyContact.relationship || 'Relative'})
         </Text>
-        <Text style={styles.emergencyPhone}>
-          📞 {patientProfile?.emergencyContact.phone || '+250 788 000 000'}
-        </Text>
+        <View style={styles.emergencyPhoneRow}>
+          <Ionicons name="call-outline" size={14} color={THEME.colors.textSecondary} />
+          <Text style={styles.emergencyPhone}>
+            {patientProfile?.emergencyContact.phone || '+250 788 000 000'}
+          </Text>
+        </View>
       </Card>
 
       {/* Privacy, Regulatory & Data Protection (SRS NFR-3.1, NFR-3.2) */}
@@ -139,7 +143,7 @@ export default function PatientProfileScreen() {
 
         <View style={styles.dataButtons}>
           <Button
-            title="📥 Export My Health Data"
+            title="Export My Health Data"
             variant="outline"
             size="sm"
             onPress={handleExportData}
@@ -252,10 +256,15 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: THEME.colors.textPrimary,
   },
+  emergencyPhoneRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 3,
+  },
   emergencyPhone: {
     fontSize: 12,
     color: THEME.colors.textSecondary,
-    marginTop: 2,
   },
   legalNotice: {
     fontSize: 11,

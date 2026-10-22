@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
+import { Ionicons } from '@expo/vector-icons';
 import { THEME } from '../../constants/theme';
 import { useAuthStore } from '../../stores/authStore';
 import { mockDomainStore } from '../../mock/mockDomainStore';
@@ -59,7 +60,9 @@ export default function NotificationsScreen() {
         )}
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={styles.emptyIcon}>🔔</Text>
+            <View style={styles.emptyIconCircle}>
+              <Ionicons name="notifications-off-outline" size={36} color={THEME.colors.primary} />
+            </View>
             <Text style={styles.emptyText}>No notifications yet.</Text>
           </View>
         }
@@ -120,9 +123,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 50,
   },
-  emptyIcon: {
-    fontSize: 36,
-    marginBottom: 8,
+  emptyIconCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: THEME.colors.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
   },
   emptyText: {
     fontSize: 13,

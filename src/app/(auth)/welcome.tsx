@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { THEME, APP_CONFIG } from '../../constants/theme';
 import { useAuthStore } from '../../stores/authStore';
 import { Button } from '../../components/ui/Button';
@@ -53,7 +54,9 @@ export default function WelcomeScreen() {
         {/* Feature Highlights */}
         <View style={styles.featuresSection}>
           <View style={styles.featureItem}>
-            <Text style={styles.featureIcon}>🏡</Text>
+            <View style={styles.iconCircle}>
+              <Ionicons name="home-outline" size={20} color={THEME.colors.primary} />
+            </View>
             <View style={styles.featureTextCol}>
               <Text style={styles.featureTitle}>Consultations At Your Residence</Text>
               <Text style={styles.featureDesc}>
@@ -63,7 +66,9 @@ export default function WelcomeScreen() {
           </View>
 
           <View style={styles.featureItem}>
-            <Text style={styles.featureIcon}>🧪</Text>
+            <View style={styles.iconCircle}>
+              <Ionicons name="flask-outline" size={20} color={THEME.colors.primary} />
+            </View>
             <View style={styles.featureTextCol}>
               <Text style={styles.featureTitle}>Home Specimen Lab Collection</Text>
               <Text style={styles.featureDesc}>
@@ -73,7 +78,9 @@ export default function WelcomeScreen() {
           </View>
 
           <View style={styles.featureItem}>
-            <Text style={styles.featureIcon}>📄</Text>
+            <View style={styles.iconCircle}>
+              <Ionicons name="document-text-outline" size={20} color={THEME.colors.primary} />
+            </View>
             <View style={styles.featureTextCol}>
               <Text style={styles.featureTitle}>Instant Records & PDF Results</Text>
               <Text style={styles.featureDesc}>
@@ -203,7 +210,7 @@ const styles = StyleSheet.create({
   },
   featureItem: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     backgroundColor: THEME.colors.surface,
     padding: THEME.spacing.md,
     borderRadius: THEME.borderRadius.md,
@@ -211,8 +218,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: THEME.colors.border,
   },
-  featureIcon: {
-    fontSize: 24,
+  iconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: THEME.colors.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginRight: 12,
   },
   featureTextCol: {

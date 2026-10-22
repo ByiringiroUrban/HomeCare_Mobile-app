@@ -1,7 +1,6 @@
-// Doctor Experience Tab Layout (Dashboard, Requests, Schedule, Patients, Profile)
 import React from 'react';
 import { Tabs } from 'expo-router';
-import { Text } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { THEME } from '../../constants/theme';
 
 export default function DoctorTabsLayout() {
@@ -36,7 +35,13 @@ export default function DoctorTabsLayout() {
         options={{
           title: 'Dashboard',
           headerShown: false,
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 18, color }}>📊</Text>,
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? 'grid' : 'grid-outline'}
+              size={size || 22}
+              color={color}
+            />
+          ),
         }}
       />
       <Tabs.Screen
@@ -44,7 +49,13 @@ export default function DoctorTabsLayout() {
         options={{
           title: 'Requests',
           headerTitle: 'Patient Visit Requests',
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 18, color }}>📬</Text>,
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? 'mail-unread' : 'mail-outline'}
+              size={size || 22}
+              color={color}
+            />
+          ),
         }}
       />
       <Tabs.Screen
@@ -52,7 +63,13 @@ export default function DoctorTabsLayout() {
         options={{
           title: 'Schedule',
           headerTitle: 'Availability & Slots',
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 18, color }}>⏱️</Text>,
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? 'time' : 'time-outline'}
+              size={size || 22}
+              color={color}
+            />
+          ),
         }}
       />
       <Tabs.Screen
@@ -60,7 +77,13 @@ export default function DoctorTabsLayout() {
         options={{
           title: 'Patients',
           headerTitle: 'Assigned Patients',
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 18, color }}>👥</Text>,
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? 'people' : 'people-outline'}
+              size={size || 22}
+              color={color}
+            />
+          ),
         }}
       />
       <Tabs.Screen
@@ -68,7 +91,13 @@ export default function DoctorTabsLayout() {
         options={{
           title: 'Profile',
           headerTitle: 'Doctor Credentials & Status',
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 18, color }}>🩺</Text>,
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? 'medkit' : 'medkit-outline'}
+              size={size || 22}
+              color={color}
+            />
+          ),
         }}
       />
 

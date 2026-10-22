@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
+import { Ionicons } from '@expo/vector-icons';
 import { THEME } from '../../../constants/theme';
 import { useAuthStore } from '../../../stores/authStore';
 import { patientService } from '../../../services/api';
@@ -145,9 +146,12 @@ export default function VisitDetailScreen() {
       {visit.status === 'alternative_proposed' && (
         <Card style={styles.alternativeCard}>
           <Text style={styles.altTitle}>Doctor Proposed Alternative Time</Text>
-          <Text style={styles.altDateTime}>
-            🗓️ {visit.alternativeDate} at {visit.alternativeTime}
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+            <Ionicons name="calendar-outline" size={16} color="#713F12" style={{ marginRight: 5 }} />
+            <Text style={styles.altDateTime}>
+              {visit.alternativeDate} at {visit.alternativeTime}
+            </Text>
+          </View>
           {visit.alternativeProposalNote && (
             <Text style={styles.altNote}>Note: "{visit.alternativeProposalNote}"</Text>
           )}
@@ -204,7 +208,11 @@ export default function VisitDetailScreen() {
                     isCurrent && styles.timelineDotActive,
                   ]}
                 >
-                  <Text style={styles.timelineDotText}>{isFinished ? '✓' : idx + 1}</Text>
+                  {isFinished ? (
+                    <Ionicons name="checkmark" size={14} color="#FFF" />
+                  ) : (
+                    <Text style={styles.timelineDotText}>{idx + 1}</Text>
+                  )}
                 </View>
                 <Text
                   style={[
@@ -224,7 +232,10 @@ export default function VisitDetailScreen() {
       {/* Residence & Patient Notes */}
       <Card style={styles.detailsCard}>
         <Text style={styles.detailsCardTitle}>Residence Visit Address</Text>
-        <Text style={styles.addressLine}>📍 {visit.visitAddress}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Ionicons name="location-outline" size={15} color={THEME.colors.primary} style={{ marginRight: 4 }} />
+          <Text style={styles.addressLine}>{visit.visitAddress}</Text>
+        </View>
         <Text style={styles.districtLine}>Kigali District: {visit.district}</Text>
         {visit.accessInstructions ? (
           <Text style={styles.instructionsLine}>Landmark/Gate: {visit.accessInstructions}</Text>
@@ -265,8 +276,9 @@ export default function VisitDetailScreen() {
       {/* Cancellation / Reschedule Restriction Banner */}
       {isLockedFromCancellation && visit.status !== 'completed' && (
         <View style={styles.lockNotice}>
+          <Ionicons name="lock-closed" size={15} color={THEME.colors.textSecondary} style={{ marginRight: 6 }} />
           <Text style={styles.lockNoticeText}>
-            🔒 Cancellation and rescheduling are locked because the doctor is en route or at your residence.
+            Cancellation and rescheduling are locked because the doctor is en route or at your residence.
           </Text>
         </View>
       )}
@@ -286,7 +298,7 @@ export default function VisitDetailScreen() {
         {visit.status === 'completed' && (
           <View style={styles.completedActions}>
             <Button
-              title="⭐️ Rate & Review Doctor"
+              title="Rate & Review Doctor"
               variant="primary"
               onPress={() => setShowRatingModal(true)}
               style={styles.actionBtn}
@@ -313,8 +325,12 @@ export default function VisitDetailScreen() {
           <Text style={styles.modalTitle}>Rate Doctor Consultation</Text>
           <View style={styles.starsRow}>
             {[1, 2, 3, 4, 5].map((s: number) => (
-              <Pressable key={s} onPress={() => setRating(s)}>
-                <Text style={[styles.starBtn, rating >= s && styles.starBtnActive]}>★</Text>
+              <Pressable key={s} onPress={() => setRating(s)} style={{ padding: 4 }}>
+                <Ionicons
+                  name={rating >= s ? 'star' : 'star-outline'}
+                  size={28}
+                  color={rating >= s ? '#F59E0B' : THEME.colors.textMuted}
+                />
               </Pressable>
             ))}
           </View>

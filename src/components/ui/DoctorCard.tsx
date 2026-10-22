@@ -1,6 +1,6 @@
-// Reusable Doctor Card Component
 import React from 'react';
 import { View, Text, StyleSheet, Image, Pressable } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { THEME } from '../../constants/theme';
 import { DoctorProfile } from '../../types/domain';
 import { Card } from './Card';
@@ -34,14 +34,18 @@ export const DoctorCard: React.FC<DoctorCardProps> = ({
               {doctor.name}
             </Text>
             {doctor.verificationStatus === 'approved' && (
-              <View style={styles.verifiedDot}>
-                <Text style={styles.verifiedCheck}>✓</Text>
-              </View>
+              <Ionicons
+                name="checkmark-circle"
+                size={17}
+                color={THEME.colors.primary}
+                style={{ marginLeft: 5 }}
+              />
             )}
           </View>
           <Text style={styles.specialty}>{doctor.specialty}</Text>
           <View style={styles.metricsRow}>
-            <Text style={styles.ratingText}>★ {doctor.rating.toFixed(1)}</Text>
+            <Ionicons name="star" size={13} color="#D97706" style={{ marginRight: 2 }} />
+            <Text style={styles.ratingText}>{doctor.rating.toFixed(1)}</Text>
             <Text style={styles.reviewsCount}>({doctor.reviewCount} visits)</Text>
             <Text style={styles.bullet}>•</Text>
             <Text style={styles.expText}>{doctor.experienceYears} yrs exp</Text>
@@ -56,7 +60,8 @@ export const DoctorCard: React.FC<DoctorCardProps> = ({
       <View style={styles.districtChipsRow}>
         {doctor.coverageDistricts.map((district) => (
           <View key={district} style={styles.districtChip}>
-            <Text style={styles.districtText}>📍 {district}</Text>
+            <Ionicons name="location-sharp" size={12} color={THEME.colors.primary} style={{ marginRight: 3 }} />
+            <Text style={styles.districtText}>{district}</Text>
           </View>
         ))}
       </View>

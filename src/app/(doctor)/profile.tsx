@@ -7,6 +7,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { router } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { THEME } from '../../constants/theme';
 import { useAuthStore } from '../../stores/authStore';
 import { Card } from '../../components/ui/Card';
@@ -46,7 +47,10 @@ export default function DoctorProfileScreen() {
         </View>
         <View style={styles.infoRow}>
           <Text style={styles.label}>Average Rating:</Text>
-          <Text style={styles.value}>★ {doctorProfile?.rating?.toFixed(1) || '0.0'} ({doctorProfile?.reviewCount || 0} reviews)</Text>
+          <View style={styles.ratingValRow}>
+            <Ionicons name="star" size={13} color="#F59E0B" />
+            <Text style={styles.value}>{doctorProfile?.rating?.toFixed(1) || '0.0'} ({doctorProfile?.reviewCount || 0} reviews)</Text>
+          </View>
         </View>
 
         <View style={styles.divider} />
@@ -166,6 +170,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     color: THEME.colors.textPrimary,
+  },
+  ratingValRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   divider: {
     height: 1,

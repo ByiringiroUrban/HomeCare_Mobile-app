@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
+import { Ionicons } from '@expo/vector-icons';
 import { THEME } from '../../../constants/theme';
 import { patientService } from '../../../services/api';
 import { Card } from '../../../components/ui/Card';
@@ -49,16 +50,15 @@ export default function DoctorDetailScreen() {
         <View style={styles.nameRow}>
           <Text style={styles.doctorName}>{doctor.name}</Text>
           {doctor.verificationStatus === 'approved' && (
-            <View style={styles.verifiedDot}>
-              <Text style={styles.checkIcon}>✓</Text>
-            </View>
+            <Ionicons name="checkmark-circle" size={18} color={THEME.colors.primary} style={{ marginLeft: 6 }} />
           )}
         </View>
         <Text style={styles.specialty}>{doctor.specialty}</Text>
         <Text style={styles.licenseText}>License: {doctor.licenseNumber}</Text>
 
         <View style={styles.ratingRow}>
-          <Text style={styles.starText}>★ {doctor.rating.toFixed(1)}</Text>
+          <Ionicons name="star" size={14} color="#F59E0B" />
+          <Text style={styles.starText}>{doctor.rating.toFixed(1)}</Text>
           <Text style={styles.reviewsCount}>({doctor.reviewCount} home visits)</Text>
           <Text style={styles.bullet}>•</Text>
           <Text style={styles.expText}>{doctor.experienceYears} Years Clinical Exp</Text>
@@ -102,7 +102,8 @@ export default function DoctorDetailScreen() {
           <Text style={styles.tagLabel}>Districts:</Text>
           {doctor.coverageDistricts.map((d: string) => (
             <View key={d} style={styles.tagChip}>
-              <Text style={styles.tagText}>📍 {d}</Text>
+              <Ionicons name="location-outline" size={12} color={THEME.colors.textSecondary} style={{ marginRight: 3 }} />
+              <Text style={styles.tagText}>{d}</Text>
             </View>
           ))}
         </View>
@@ -111,7 +112,8 @@ export default function DoctorDetailScreen() {
           <Text style={styles.tagLabel}>Languages:</Text>
           {doctor.languages.map((l: string) => (
             <View key={l} style={styles.tagChip}>
-              <Text style={styles.tagText}>🗣️ {l}</Text>
+              <Ionicons name="chatbubble-ellipses-outline" size={12} color={THEME.colors.textSecondary} style={{ marginRight: 3 }} />
+              <Text style={styles.tagText}>{l}</Text>
             </View>
           ))}
         </View>
@@ -127,7 +129,10 @@ export default function DoctorDetailScreen() {
             <Card key={rev.id} style={styles.reviewCard}>
               <View style={styles.reviewHeader}>
                 <Text style={styles.reviewerName}>{rev.patientName}</Text>
-                <Text style={styles.reviewStars}>★ {rev.rating}/5</Text>
+                <View style={styles.reviewStarsRow}>
+                  <Ionicons name="star" size={12} color="#F59E0B" />
+                  <Text style={styles.reviewStars}>{rev.rating}/5</Text>
+                </View>
               </View>
               <Text style={styles.reviewComment}>"{rev.comment}"</Text>
               <Text style={styles.reviewDate}>{rev.createdAt.split('T')[0]}</Text>
@@ -217,6 +222,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 8,
+    gap: 4,
   },
   starText: {
     fontSize: 14,
@@ -329,6 +335,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 4,
+  },
+  reviewStarsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
   },
   reviewerName: {
     fontSize: 12,

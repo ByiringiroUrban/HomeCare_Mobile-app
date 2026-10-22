@@ -13,6 +13,7 @@ import { THEME } from '../../../constants/theme';
 import { patientService } from '../../../services/api';
 import { Card } from '../../../components/ui/Card';
 import { Button } from '../../../components/ui/Button';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function ResultDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -56,7 +57,8 @@ export default function ResultDetailScreen() {
           </View>
           {isDownloaded && (
             <View style={styles.cachedBadge}>
-              <Text style={styles.cachedText}>✓ AVAILABLE OFFLINE</Text>
+              <Ionicons name="cloud-done-outline" size={12} color="#15803D" style={{ marginRight: 4 }} />
+              <Text style={styles.cachedText}>AVAILABLE OFFLINE</Text>
             </View>
           )}
         </View>
@@ -168,6 +170,8 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   cachedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: THEME.colors.successSoft,
     paddingHorizontal: 8,
     paddingVertical: 3,

@@ -17,6 +17,7 @@ import { mockDomainStore } from '../../mock/mockDomainStore';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function AdminConsoleScreen() {
   const { logout, resetDemoData } = useAuthStore();
@@ -144,7 +145,10 @@ export default function AdminConsoleScreen() {
               <Text style={styles.metricLbl}>Gross Billed Volume</Text>
             </Card>
             <Card style={styles.metricCard}>
-              <Text style={styles.metricVal}>★ {metrics?.avgRating || 0}</Text>
+              <View style={styles.ratingMetricRow}>
+                <Ionicons name="star" size={16} color="#F59E0B" />
+                <Text style={styles.metricVal}>{metrics?.avgRating || 0}</Text>
+              </View>
               <Text style={styles.metricLbl}>Average Doctor Rating</Text>
             </Card>
             <Card style={styles.metricCardWarning}>
@@ -258,9 +262,12 @@ export default function AdminConsoleScreen() {
       {activeTab === 'audit' && (
         <View>
           <Card style={styles.auditDisclaimer}>
-            <Text style={styles.auditDisclaimerText}>
-              🔒 Immutable health data access log mandated under Rwandan Law No. 058/2021. Tracks clinical creation, modification, and patient export actions.
-            </Text>
+            <View style={styles.disclaimerRow}>
+              <Ionicons name="lock-closed" size={16} color={THEME.colors.primaryDark} style={{ marginTop: 2, marginRight: 6 }} />
+              <Text style={styles.auditDisclaimerText}>
+                Immutable health data access log mandated under Rwandan Law No. 058/2021. Tracks clinical creation, modification, and patient export actions.
+              </Text>
+            </View>
           </Card>
 
           {auditLogs.map((log) => (
@@ -376,6 +383,11 @@ const styles = StyleSheet.create({
     padding: 12,
     borderColor: '#FDE047',
   },
+  ratingMetricRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
   metricVal: {
     fontSize: 18,
     fontWeight: '800',
@@ -479,10 +491,15 @@ const styles = StyleSheet.create({
     borderColor: '#99F6E4',
     marginBottom: THEME.spacing.md,
   },
+  disclaimerRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
   auditDisclaimerText: {
+    flex: 1,
     fontSize: 11,
     color: '#0F766E',
-    lineHeight: 15,
+    lineHeight: 16,
   },
   auditCard: {
     marginBottom: 8,

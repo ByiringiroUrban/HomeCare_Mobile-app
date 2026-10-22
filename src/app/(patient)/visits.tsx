@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
+import { Ionicons } from '@expo/vector-icons';
 import { THEME } from '../../constants/theme';
 import { useAuthStore } from '../../stores/authStore';
 import { patientService } from '../../services/api';
@@ -86,7 +87,9 @@ export default function PatientVisitsScreen() {
         )}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyIcon}>🗓️</Text>
+            <View style={styles.emptyIconCircle}>
+              <Ionicons name="calendar-outline" size={38} color={THEME.colors.primary} />
+            </View>
             <Text style={styles.emptyTitle}>No consultations found</Text>
             <Text style={styles.emptyText}>
               {filterTab === 'upcoming'
@@ -138,9 +141,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 50,
   },
-  emptyIcon: {
-    fontSize: 40,
-    marginBottom: 8,
+  emptyIconCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: THEME.colors.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
   },
   emptyTitle: {
     fontSize: 16,
@@ -152,5 +160,6 @@ const styles = StyleSheet.create({
     color: THEME.colors.textSecondary,
     marginTop: 4,
     textAlign: 'center',
+    paddingHorizontal: 20,
   },
 });

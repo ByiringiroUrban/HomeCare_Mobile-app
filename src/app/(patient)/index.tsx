@@ -12,11 +12,10 @@ import {
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
+import { Ionicons } from '@expo/vector-icons';
 import { THEME, APP_CONFIG } from '../../constants/theme';
 import { useAuthStore } from '../../stores/authStore';
 import { patientService } from '../../services/api';
-import { EmergencyBanner } from '../../components/ui/EmergencyBanner';
-import { Card } from '../../components/ui/Card';
 import { DoctorCard } from '../../components/ui/DoctorCard';
 import { VisitCard } from '../../components/ui/VisitCard';
 
@@ -43,16 +42,9 @@ export default function PatientHomeScreen() {
     queryFn: () => patientService.searchDoctors({ minRating: 4.8 }),
   });
 
-  // Medical records & results
-  const { data: recordsData, refetch: refetchRecords } = useQuery({
-    queryKey: ['patient-records', currentUser?.id],
-    queryFn: () => patientService.getRecords(currentUser?.id || ''),
-    enabled: !!currentUser,
-  });
-
   const onRefresh = async () => {
     setRefreshing(true);
-    await Promise.all([refetchVisits(), refetchDoctors(), refetchRecords()]);
+    await Promise.all([refetchVisits(), refetchDoctors()]);
     setRefreshing(false);
   };
 
@@ -61,8 +53,6 @@ export default function PatientHomeScreen() {
       v.status
     )
   );
-
-  const recentResult = recordsData?.results?.[0];
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -81,16 +71,16 @@ export default function PatientHomeScreen() {
             style={styles.notifBtn}
             onPress={() => router.push('/(patient)/notifications')}
           >
-            <Text style={styles.notifIcon}>🔔</Text>
+            <Ionicons name="notifications-outline" size={20} color={THEME.colors.textPrimary} />
           </Pressable>
         </View>
 
         {/* Greeting & Location Header */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <Text style={styles.greeting}>Muraho, {currentUser?.name?.split(' ')[0] || 'Patient'} 👋</Text>
+            <Text style={styles.greeting}>Muraho, {currentUser?.name?.split(' ')[0] || 'Patient'}</Text>
             <View style={styles.locationRow}>
-              <Text style={styles.locationIcon}>📍</Text>
+              <Ionicons name="location-sharp" size={13} color={THEME.colors.primary} style={{ marginRight: 3 }} />
               <Text style={styles.locationText} numberOfLines={1}>
                 {patientProfile?.district ? `${patientProfile.district}, Kigali` : 'Kigali, Rwanda'}
               </Text>
@@ -98,10 +88,18 @@ export default function PatientHomeScreen() {
           </View>
         </View>
 
-        {/* Emergency Disclaimer Banner */}
-        <EmergencyBanner />
+        {/* Quick Search & Discovery Action Bar */}
+        <View style={styles.searchBarContainer}>
+          <Pressable
+            style={styles.searchBarButton}
+            onPress={() => router.push('/(patient)/doctors')}
+          >
+            <Ionicons name="search-outline" size={18} color={THEME.colors.textMuted} style={{ marginRight: 8 }} />
+            <Text style={styles.searchBarPlaceholder}>Find specialist, symptom, or district...</Text>
+          </Pressable>
+        </View>
 
-        {/* Live Active / Upcoming Visit Banner */}
+        {/* Live Active / Upcoming Visit Banner (Only if patient has a real visit) */}
         {upcomingVisit && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
@@ -120,16 +118,16 @@ export default function PatientHomeScreen() {
           </View>
         )}
 
-        {/* Quick Symptoms / Specialty Directory */}
+        {/* Quick Medical Specialties */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Medical Specialties</Text>
             <Pressable onPress={() => router.push('/(patient)/doctors')}>
-              <Text style={styles.sectionAction}>See All ({specialties.length}) ›</Text>
+              <Text style={styles.sectionAction}>See All ›</Text>
             </Pressable>
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.specScroll}>
-            {specialties.map((spec) => (
+            {specialties.slice(0, 5).map((spec) => (
               <Pressable
                 key={spec.id}
                 style={styles.specChip}
@@ -141,56 +139,25 @@ export default function PatientHomeScreen() {
                 }
               >
                 <View style={styles.specIconCircle}>
-                  <Text style={styles.specIconText}>🩺</Text>
+                  <Ionicons name="medkit-outline" size={18} color={THEME.colors.primary} />
                 </View>
-                <Text style={styles.specName}>{spec.name}</Text>
+                <Text style={styles.specName} numberOfLines={1}>{spec.name}</Text>
                 <Text style={styles.specCount}>{spec.doctorCount} doctors</Text>
               </Pressable>
             ))}
           </ScrollView>
         </View>
 
-        {/* Recent Laboratory Examination Results */}
-        {recentResult && (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Recent Laboratory Results</Text>
-              <Pressable onPress={() => router.push('/(patient)/records')}>
-                <Text style={styles.sectionAction}>View Records ›</Text>
-              </Pressable>
-            </View>
-            <Card
-              style={styles.resultCard}
-              onPress={() => router.push(`/(patient)/result/${recentResult.id}` as any)}
-            >
-              <View style={styles.resultHeader}>
-                <View style={styles.resultBadge}>
-                  <Text style={styles.resultBadgeText}>VALIDATED</Text>
-                </View>
-                <Text style={styles.resultDate}>{recentResult.publishedAt.split('T')[0]}</Text>
-              </View>
-              <Text style={styles.resultTitle}>{recentResult.title}</Text>
-              <Text style={styles.resultFindings} numberOfLines={2}>
-                {recentResult.summaryFindings}
-              </Text>
-              <View style={styles.resultFooter}>
-                <Text style={styles.resultDoctor}>By {recentResult.doctorName}</Text>
-                <Text style={styles.downloadPdfLink}>Download PDF ›</Text>
-              </View>
-            </Card>
-          </View>
-        )}
-
         {/* Recommended Verified Specialists */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Recommended Verified Specialists</Text>
+            <Text style={styles.sectionTitle}>Available Verified Specialists</Text>
             <Pressable onPress={() => router.push('/(patient)/doctors')}>
-              <Text style={styles.sectionAction}>View All ›</Text>
+              <Text style={styles.sectionAction}>View All ({doctors.length}) ›</Text>
             </Pressable>
           </View>
 
-          {doctors.slice(0, 3).map((doctor) => (
+          {doctors.slice(0, 2).map((doctor) => (
             <DoctorCard
               key={doctor.userId}
               doctor={doctor}
@@ -198,6 +165,14 @@ export default function PatientHomeScreen() {
               onBookPress={() => router.push(`/(patient)/book/${doctor.userId}` as any)}
             />
           ))}
+        </View>
+
+        {/* Compact Emergency Call Help at bottom */}
+        <View style={styles.emergencyFooter}>
+          <Ionicons name="information-circle-outline" size={14} color={THEME.colors.textMuted} />
+          <Text style={styles.emergencyFooterText}>
+            Medical Emergency in Rwanda? Call SAMU Helpline <Text style={styles.emergencyNumber}>112</Text>
+          </Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -287,6 +262,29 @@ const styles = StyleSheet.create({
     color: THEME.colors.primary,
     fontWeight: '600',
   },
+  searchBarContainer: {
+    paddingHorizontal: THEME.spacing.base,
+    marginBottom: THEME.spacing.md,
+  },
+  searchBarButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: THEME.colors.surface,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: THEME.borderRadius.lg,
+    borderWidth: 1,
+    borderColor: THEME.colors.border,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 1,
+  },
+  searchBarPlaceholder: {
+    fontSize: 13,
+    color: THEME.colors.textMuted,
+  },
   specScroll: {
     flexDirection: 'row',
     marginHorizontal: -THEME.spacing.base,
@@ -297,25 +295,22 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: THEME.colors.border,
     borderRadius: THEME.borderRadius.md,
-    padding: 12,
+    padding: 10,
     marginRight: 10,
-    width: 130,
+    width: 105,
     alignItems: 'center',
   },
   specIconCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     backgroundColor: THEME.colors.primarySoft,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 8,
-  },
-  specIconText: {
-    fontSize: 20,
+    marginBottom: 6,
   },
   specName: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
     color: THEME.colors.textPrimary,
     textAlign: 'center',
@@ -323,61 +318,22 @@ const styles = StyleSheet.create({
   specCount: {
     fontSize: 10,
     color: THEME.colors.textMuted,
-    marginTop: 2,
+    marginTop: 1,
   },
-  resultCard: {
-    backgroundColor: '#F0FDFA',
-    borderColor: '#99F6E4',
-  },
-  resultHeader: {
+  emergencyFooter: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 6,
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+    marginTop: 10,
+    gap: 5,
   },
-  resultBadge: {
-    backgroundColor: THEME.colors.primary,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  resultBadgeText: {
-    color: '#FFF',
-    fontSize: 9,
-    fontWeight: '800',
-  },
-  resultDate: {
+  emergencyFooterText: {
     fontSize: 11,
     color: THEME.colors.textMuted,
   },
-  resultTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: THEME.colors.textPrimary,
-    marginBottom: 4,
-  },
-  resultFindings: {
-    fontSize: 12,
-    color: THEME.colors.textSecondary,
-    lineHeight: 16,
-    marginBottom: 8,
-  },
-  resultFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderTopWidth: 1,
-    borderColor: '#CCFBF1',
-    paddingTop: 8,
-  },
-  resultDoctor: {
-    fontSize: 11,
-    color: THEME.colors.textSecondary,
-    fontWeight: '500',
-  },
-  downloadPdfLink: {
-    fontSize: 12,
-    color: THEME.colors.primary,
-    fontWeight: '700',
+  emergencyNumber: {
+    fontWeight: '800',
+    color: THEME.colors.error,
   },
 });

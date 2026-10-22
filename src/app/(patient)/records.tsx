@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
+import { Ionicons } from '@expo/vector-icons';
 import { THEME } from '../../constants/theme';
 import { useAuthStore } from '../../stores/authStore';
 import { patientService } from '../../services/api';
@@ -101,9 +102,12 @@ export default function PatientRecordsScreen() {
 
                   {rec.followUpRecommended && (
                     <View style={styles.followUpCard}>
-                      <Text style={styles.followUpText}>
-                        🗓️ Follow-up Recommended for: {rec.followUpDate}
-                      </Text>
+                      <View style={styles.followUpHeader}>
+                        <Ionicons name="calendar-outline" size={16} color="#92400E" />
+                        <Text style={styles.followUpText}>
+                          Follow-up Recommended for: {rec.followUpDate}
+                        </Text>
+                      </View>
                       {rec.followUpNotes && (
                         <Text style={styles.followUpSub}>{rec.followUpNotes}</Text>
                       )}
@@ -308,6 +312,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#FEF9C3',
     padding: 8,
     borderRadius: THEME.borderRadius.sm,
+  },
+  followUpHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   followUpText: {
     fontSize: 12,

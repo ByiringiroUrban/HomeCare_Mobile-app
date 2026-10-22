@@ -12,6 +12,7 @@ import { THEME } from '../../constants/theme';
 import { authService } from '../../services/api';
 import { InputField } from '../../components/ui/InputField';
 import { Button } from '../../components/ui/Button';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function RegisterPatientScreen() {
   const [name, setName] = useState('');
@@ -121,7 +122,7 @@ export default function RegisterPatientScreen() {
           onPress={() => setConsentTerms(!consentTerms)}
         >
           <View style={[styles.checkbox, consentTerms && styles.checkboxActive]}>
-            {consentTerms && <Text style={styles.checkMark}>✓</Text>}
+            {consentTerms && <Ionicons name="checkmark" size={14} color="#FFF" />}
           </View>
           <Text style={styles.checkboxLabel}>
             I agree to the <Text style={styles.linkText}>Terms of Service</Text> and Privacy Policy.
@@ -133,7 +134,7 @@ export default function RegisterPatientScreen() {
           onPress={() => setConsentHealthData(!consentHealthData)}
         >
           <View style={[styles.checkbox, consentHealthData && styles.checkboxActive]}>
-            {consentHealthData && <Text style={styles.checkMark}>✓</Text>}
+            {consentHealthData && <Ionicons name="checkmark" size={14} color="#FFF" />}
           </View>
           <Text style={styles.checkboxLabel}>
             I give explicit consent to the collection and processing of my sensitive medical consultation records and laboratory test results as mandated under Rwandan Law No. 058/2021 relating to personal data protection.

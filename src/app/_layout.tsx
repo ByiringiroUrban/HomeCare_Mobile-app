@@ -1,5 +1,5 @@
 // Root Layout with Safe Area, QueryClient, and Demo Switching Header
-import React from 'react';
+import React, { useState } from 'react';
 import { Stack, router } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { View, StyleSheet, Text, Pressable } from 'react-native';
 import { useAuthStore } from '../stores/authStore';
 import { THEME } from '../constants/theme';
+import { SplashPreloader } from '../components/SplashPreloader';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -54,6 +55,8 @@ function DemoSwitchBanner() {
 }
 
 export default function RootLayout() {
+  const [showSplash, setShowSplash] = useState(true);
+
   return (
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>
@@ -73,6 +76,9 @@ export default function RootLayout() {
             <Stack.Screen name="(admin)" />
           </Stack>
         </View>
+
+        {/* Animated HomeCare Brand Splash Preloader */}
+        {showSplash && <SplashPreloader onFinish={() => setShowSplash(false)} />}
       </QueryClientProvider>
     </SafeAreaProvider>
   );

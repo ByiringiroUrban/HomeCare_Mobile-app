@@ -20,6 +20,7 @@ import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { VisitCard } from '../../components/ui/VisitCard';
 import { Button } from '../../components/ui/Button';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function DoctorDashboardScreen() {
   const { currentUser, doctorProfile, refreshProfile } = useAuthStore();
@@ -94,9 +95,17 @@ export default function DoctorDashboardScreen() {
         {/* Online / Offline Quick Toggle (FR-4.1) */}
         <Card style={styles.statusToggleCard}>
           <View style={styles.toggleInfo}>
-            <Text style={styles.toggleTitle}>
-              {doctorProfile?.isOnline ? '🟢 Available for Home Visits' : '⚪ Offline / Unavailable'}
-            </Text>
+            <View style={styles.statusTitleRow}>
+              <View
+                style={[
+                  styles.statusIndicatorDot,
+                  { backgroundColor: doctorProfile?.isOnline ? THEME.colors.success : THEME.colors.textMuted },
+                ]}
+              />
+              <Text style={styles.toggleTitle}>
+                {doctorProfile?.isOnline ? 'Available for Home Visits' : 'Offline / Unavailable'}
+              </Text>
+            </View>
             <Text style={styles.toggleSub}>
               {doctorProfile?.isOnline
                 ? 'Visible in Kigali specialist search'
@@ -242,6 +251,16 @@ const styles = StyleSheet.create({
   },
   toggleInfo: {
     flex: 1,
+  },
+  statusTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  statusIndicatorDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
   },
   toggleTitle: {
     fontSize: 14,

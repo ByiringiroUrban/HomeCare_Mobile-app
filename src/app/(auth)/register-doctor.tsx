@@ -12,6 +12,7 @@ import { THEME, APP_CONFIG } from '../../constants/theme';
 import { authService } from '../../services/api';
 import { InputField } from '../../components/ui/InputField';
 import { Button } from '../../components/ui/Button';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function RegisterDoctorScreen() {
   const [name, setName] = useState('');
@@ -143,10 +144,17 @@ export default function RegisterDoctorScreen() {
                 onPress={() => toggleDistrict(d)}
                 style={[styles.districtChip, isSelected && styles.districtChipActive]}
               >
-                <Text style={[styles.districtText, isSelected && styles.districtTextActive]}>
-                  {isSelected ? '✓ ' : '+ '}
-                  {d}
-                </Text>
+                <View style={styles.chipInner}>
+                  <Ionicons
+                    name={isSelected ? 'checkmark' : 'add'}
+                    size={14}
+                    color={isSelected ? '#FFF' : THEME.colors.textSecondary}
+                    style={{ marginRight: 4 }}
+                  />
+                  <Text style={[styles.districtText, isSelected && styles.districtTextActive]}>
+                    {d}
+                  </Text>
+                </View>
               </Pressable>
             );
           })}
@@ -217,6 +225,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: THEME.colors.border,
     backgroundColor: THEME.colors.surface,
+  },
+  chipInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   districtChipActive: {
     backgroundColor: THEME.colors.primary,

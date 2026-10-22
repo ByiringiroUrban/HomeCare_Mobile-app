@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
+import { Ionicons } from '@expo/vector-icons';
 import { THEME, APP_CONFIG } from '../../../constants/theme';
 import { useAuthStore } from '../../../stores/authStore';
 import { patientService } from '../../../services/api';
@@ -78,7 +79,7 @@ export default function BookVisitScreen() {
     // Simulated GPS pin resolution for Kigali
     setAddress('KG 690 St, Near Kigali Heights, Kimihurura');
     setDistrict('Gasabo');
-    alert('📍 GPS pin recorded: Kimihurura (-1.9536, 30.0897)');
+    alert('GPS pin recorded: Kimihurura (-1.9536, 30.0897)');
   };
 
   const handleSubmitBooking = async () => {
@@ -211,10 +212,17 @@ export default function BookVisitScreen() {
                 onPress={() => toggleSymptom(sym)}
                 style={[styles.symptomChip, isSelected && styles.symptomChipActive]}
               >
-                <Text style={[styles.symptomText, isSelected && styles.symptomTextActive]}>
-                  {isSelected ? '✓ ' : '+ '}
-                  {sym}
-                </Text>
+                <View style={styles.chipInner}>
+                  <Ionicons
+                    name={isSelected ? 'checkmark' : 'add'}
+                    size={14}
+                    color={isSelected ? '#FFF' : THEME.colors.textSecondary}
+                    style={{ marginRight: 4 }}
+                  />
+                  <Text style={[styles.symptomText, isSelected && styles.symptomTextActive]}>
+                    {sym}
+                  </Text>
+                </View>
               </Pressable>
             );
           })}
@@ -240,7 +248,12 @@ export default function BookVisitScreen() {
             );
           }}
         >
-          <Text style={styles.attachmentIcon}>{hasAttachment ? '📎' : '➕'}</Text>
+          <Ionicons
+            name={hasAttachment ? 'attach' : 'cloud-upload-outline'}
+            size={18}
+            color={THEME.colors.primaryDark}
+            style={{ marginRight: 8 }}
+          />
           <Text style={styles.attachmentText}>
             {hasAttachment
               ? 'Attached: sample-prior-prescription.jpg (Tap to remove)'
@@ -254,7 +267,8 @@ export default function BookVisitScreen() {
         <View style={styles.addressHeader}>
           <Text style={styles.sectionTitle}>3. Residence Visit Address</Text>
           <Pressable onPress={handleUseGpsPin} style={styles.gpsBtn}>
-            <Text style={styles.gpsBtnText}>📍 Use GPS Pin</Text>
+            <Ionicons name="navigate-circle" size={14} color={THEME.colors.primaryDark} style={{ marginRight: 3 }} />
+            <Text style={styles.gpsBtnText}>Use GPS Pin</Text>
           </Pressable>
         </View>
 
@@ -459,6 +473,10 @@ const styles = StyleSheet.create({
     backgroundColor: THEME.colors.surfaceSubtle,
     borderWidth: 1,
     borderColor: THEME.colors.border,
+  },
+  chipInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   symptomChipActive: {
     backgroundColor: THEME.colors.primary,

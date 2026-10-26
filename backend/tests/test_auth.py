@@ -2,10 +2,22 @@ import pytest
 import asyncio
 from httpx import AsyncClient, ASGITransport
 from app.main import app
+from app.db.session import engine, Base
+
+
+@pytest.fixture(autouse=True, scope="module")
+async def setup_db():
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    yield
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
+
 
 @pytest.mark.asyncio
 async def test_health():
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+
         response = await ac.get("/health")
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}

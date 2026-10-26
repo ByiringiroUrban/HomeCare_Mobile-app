@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, Field
 from typing import Optional, List
 from datetime import datetime
 from enum import Enum
@@ -19,14 +19,14 @@ class DoctorVerificationStatus(str, Enum):
 # User Schemas
 class UserBase(BaseModel):
     name: str
-    email: EmailStr
+    email: str
     phone: str
     avatar_url: Optional[str] = None
 
 
 class PatientRegisterRequest(BaseModel):
     name: str
-    email: EmailStr
+    email: str
     phone: str
     password: str = Field(..., min_length=6)
     age: Optional[int] = None
@@ -38,7 +38,7 @@ class PatientRegisterRequest(BaseModel):
 
 class DoctorRegisterRequest(BaseModel):
     name: str
-    email: EmailStr
+    email: str
     phone: str
     password: str = Field(..., min_length=6)
     specialty: str
@@ -46,6 +46,7 @@ class DoctorRegisterRequest(BaseModel):
     experience_years: int = 0
     qualifications: List[str] = []
     coverage_districts: List[str] = []
+
 
 
 class LoginRequest(BaseModel):
@@ -107,4 +108,5 @@ class OtpVerifyRequest(BaseModel):
 
 
 class ResetPasswordRequest(BaseModel):
-    email: EmailStr
+    email: str
+

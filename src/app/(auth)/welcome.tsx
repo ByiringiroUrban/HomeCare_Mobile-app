@@ -1,4 +1,4 @@
-// Welcome & Onboarding Screen with Quick Demo Selectors
+// Welcome & Onboarding Screen
 import React from 'react';
 import {
   View,
@@ -12,28 +12,11 @@ import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { THEME, APP_CONFIG } from '../../constants/theme';
-import { useAuthStore } from '../../stores/authStore';
 import { Button } from '../../components/ui/Button';
-import { Card } from '../../components/ui/Card';
 import { EmergencyBanner } from '../../components/ui/EmergencyBanner';
 
 export default function WelcomeScreen() {
-  const { loginDemo, isLoading } = useAuthStore();
 
-  const handleSelectDemo = async (role: 'patient1' | 'patient2' | 'doctor1' | 'doctor2' | 'admin') => {
-    try {
-      const user = await loginDemo(role);
-      if (user.role === 'patient') {
-        router.replace('/(patient)');
-      } else if (user.role === 'doctor') {
-        router.replace('/(doctor)');
-      } else if (user.role === 'admin') {
-        router.replace('/(admin)');
-      }
-    } catch (err: any) {
-      alert(err.message || 'Failed to sign in demo user');
-    }
-  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -51,134 +34,59 @@ export default function WelcomeScreen() {
         {/* Emergency Disclaimer Banner */}
         <EmergencyBanner />
 
-        {/* Feature Highlights */}
-        <View style={styles.featuresSection}>
-          <View style={styles.featureItem}>
-            <View style={styles.iconCircle}>
-              <Ionicons name="home-outline" size={20} color={THEME.colors.primary} />
-            </View>
-            <View style={styles.featureTextCol}>
-              <Text style={styles.featureTitle}>Consultations At Your Residence</Text>
-              <Text style={styles.featureDesc}>
-                Licensed specialist physicians travel directly to your home in Kigali.
-              </Text>
-            </View>
-          </View>
+        {/* Feature Highlights - Clean & Minimal Hero */}
+        <View style={styles.heroSection}>
+          <Text style={styles.heroHeadline}>Quality Healthcare Delivered to Your Home</Text>
+          <Text style={styles.heroSubheadline}>
+            Connect with certified doctors across Kigali for convenient in-person medical consultations and lab collections.
+          </Text>
+        </View>
 
-          <View style={styles.featureItem}>
-            <View style={styles.iconCircle}>
-              <Ionicons name="flask-outline" size={20} color={THEME.colors.primary} />
-            </View>
-            <View style={styles.featureTextCol}>
-              <Text style={styles.featureTitle}>Home Specimen Lab Collection</Text>
-              <Text style={styles.featureDesc}>
-                Doctors collect routine blood and swab samples on-site and deliver them to partner labs.
-              </Text>
-            </View>
+        {/* Core Value Pills */}
+        <View style={styles.benefitsRow}>
+          <View style={styles.benefitPill}>
+            <Ionicons name="home-outline" size={16} color={THEME.colors.primary} />
+            <Text style={styles.benefitPillText}>At Home</Text>
           </View>
-
-          <View style={styles.featureItem}>
-            <View style={styles.iconCircle}>
-              <Ionicons name="document-text-outline" size={20} color={THEME.colors.primary} />
-            </View>
-            <View style={styles.featureTextCol}>
-              <Text style={styles.featureTitle}>Instant Records & PDF Results</Text>
-              <Text style={styles.featureDesc}>
-                Access electronic prescriptions, consultation summaries, and downloadable PDF reports.
-              </Text>
-            </View>
+          <View style={styles.benefitPill}>
+            <Ionicons name="shield-checkmark-outline" size={16} color={THEME.colors.primary} />
+            <Text style={styles.benefitPillText}>Verified MDs</Text>
+          </View>
+          <View style={styles.benefitPill}>
+            <Ionicons name="document-text-outline" size={16} color={THEME.colors.primary} />
+            <Text style={styles.benefitPillText}>Digital Rx</Text>
           </View>
         </View>
 
-        {/* Standard Authentication Actions */}
+        {/* Primary Action Buttons */}
         <View style={styles.authButtons}>
           <Button
-            title="Sign In to Your Account"
-            onPress={() => router.push('/(auth)/login')}
+            title="Create Patient Account"
+            onPress={() => router.push('/(auth)/register-patient')}
             size="lg"
             style={styles.mainBtn}
           />
-          <View style={styles.registerRow}>
-            <Button
-              title="Register as Patient"
-              variant="outline"
-              size="md"
-              onPress={() => router.push('/(auth)/register-patient')}
-              style={styles.halfBtn}
-            />
-            <Button
-              title="Doctor Onboarding"
-              variant="secondary"
-              size="md"
-              onPress={() => router.push('/(auth)/register-doctor')}
-              style={styles.halfBtn}
-            />
-          </View>
+          <Button
+            title="Sign In"
+            variant="outline"
+            size="lg"
+            onPress={() => router.push('/(auth)/login')}
+            style={styles.secondaryBtn}
+          />
         </View>
 
-        {/* Demo Fast-Track Accounts Panel */}
-        <Card style={styles.demoCard}>
-          <View style={styles.demoHeader}>
-            <Text style={styles.demoTitle}>DEVELOPMENT & EVALUATION ACCOUNTS</Text>
-            <Text style={styles.demoSubtitle}>
-              Tap any pre-configured role to immediately enter complete interactive flows:
-            </Text>
-          </View>
-
-          <View style={styles.demoButtonGroup}>
-            <Text style={styles.roleGroupLabel}>PATIENTS</Text>
-            <Pressable
-              style={styles.demoBtn}
-              onPress={() => handleSelectDemo('patient1')}
-              disabled={isLoading}
-            >
-              <Text style={styles.demoBtnTitle}>Diane Uwase (Patient 1)</Text>
-              <Text style={styles.demoBtnDesc}>Kibagabaga • Has completed visit + Active visit</Text>
-            </Pressable>
-
-            <Pressable
-              style={styles.demoBtn}
-              onPress={() => handleSelectDemo('patient2')}
-              disabled={isLoading}
-            >
-              <Text style={styles.demoBtnTitle}>Jean-Paul Mugisha (Patient 2)</Text>
-              <Text style={styles.demoBtnDesc}>Gikondo • Has pending visit request with Dr. Aline</Text>
-            </Pressable>
-
-            <Text style={styles.roleGroupLabel}>SPECIALIST DOCTORS</Text>
-            <Pressable
-              style={styles.demoBtn}
-              onPress={() => handleSelectDemo('doctor1')}
-              disabled={isLoading}
-            >
-              <Text style={styles.demoBtnTitle}>Dr. Eric Kayitare (General Medicine)</Text>
-              <Text style={styles.demoBtnDesc}>Assigned to Diane • Active "On the way" visit</Text>
-            </Pressable>
-
-            <Pressable
-              style={styles.demoBtn}
-              onPress={() => handleSelectDemo('doctor2')}
-              disabled={isLoading}
-            >
-              <Text style={styles.demoBtnTitle}>Dr. Aline Mukeshimana (Pediatrics)</Text>
-              <Text style={styles.demoBtnDesc}>Pending request review & alternative slot demo</Text>
-            </Pressable>
-
-            <Text style={styles.roleGroupLabel}>ADMINISTRATION CONSOLE</Text>
-            <Pressable
-              style={[styles.demoBtn, styles.adminBtn]}
-              onPress={() => handleSelectDemo('admin')}
-              disabled={isLoading}
-            >
-              <Text style={styles.adminBtnTitle}>Platform Compliance Administrator</Text>
-              <Text style={styles.adminBtnDesc}>Doctor credential review, audit logs & metrics</Text>
-            </Pressable>
-          </View>
-        </Card>
+        {/* Subtle Doctor Link at bottom */}
+        <View style={styles.doctorFooter}>
+          <Text style={styles.doctorFooterText}>Are you a licensed physician? </Text>
+          <Pressable onPress={() => router.push('/(auth)/register-doctor')}>
+            <Text style={styles.doctorLink}>Doctor Onboarding ›</Text>
+          </Pressable>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
+
 
 const styles = StyleSheet.create({
   safeArea: {
@@ -204,116 +112,75 @@ const styles = StyleSheet.create({
     marginTop: 4,
     textAlign: 'center',
   },
-  featuresSection: {
-    paddingHorizontal: THEME.spacing.base,
-    marginVertical: THEME.spacing.sm,
+  heroSection: {
+    paddingHorizontal: THEME.spacing.lg,
+    paddingTop: THEME.spacing.sm,
+    paddingBottom: THEME.spacing.md,
+    alignItems: 'center',
   },
-  featureItem: {
+  heroHeadline: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: THEME.colors.textPrimary,
+    textAlign: 'center',
+    lineHeight: 26,
+    marginBottom: 8,
+  },
+  heroSubheadline: {
+    fontSize: 13,
+    color: THEME.colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 19,
+    paddingHorizontal: THEME.spacing.sm,
+  },
+  benefitsRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
+    paddingHorizontal: THEME.spacing.base,
+    marginBottom: THEME.spacing.lg,
+  },
+  benefitPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: THEME.colors.surface,
-    padding: THEME.spacing.md,
-    borderRadius: THEME.borderRadius.md,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: THEME.colors.border,
-  },
-  iconCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
     backgroundColor: THEME.colors.primarySoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
+    borderColor: '#CCFBF1',
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: THEME.borderRadius.full,
+    gap: 6,
   },
-  featureTextCol: {
-    flex: 1,
-  },
-  featureTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: THEME.colors.textPrimary,
-  },
-  featureDesc: {
+  benefitPillText: {
     fontSize: 12,
-    color: THEME.colors.textSecondary,
-    marginTop: 2,
-    lineHeight: 16,
+    fontWeight: '700',
+    color: THEME.colors.primary,
   },
   authButtons: {
     paddingHorizontal: THEME.spacing.base,
-    marginVertical: THEME.spacing.md,
+    marginVertical: THEME.spacing.sm,
+    gap: 12,
   },
   mainBtn: {
-    marginBottom: 10,
+    width: '100%',
   },
-  registerRow: {
+  secondaryBtn: {
+    width: '100%',
+  },
+  doctorFooter: {
     flexDirection: 'row',
-    gap: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: THEME.spacing.xl,
   },
-  halfBtn: {
-    flex: 1,
+  doctorFooterText: {
+    fontSize: 13,
+    color: THEME.colors.textSecondary,
   },
-  demoCard: {
-    marginHorizontal: THEME.spacing.base,
-    marginTop: THEME.spacing.md,
-    backgroundColor: '#F8FAFC',
-    borderColor: '#CBD5E1',
-  },
-  demoHeader: {
-    marginBottom: 12,
-  },
-  demoTitle: {
-    fontSize: 11,
-    fontWeight: '800',
+  doctorLink: {
+    fontSize: 13,
+    fontWeight: '700',
     color: THEME.colors.primary,
-    letterSpacing: 0.5,
-  },
-  demoSubtitle: {
-    fontSize: 12,
-    color: THEME.colors.textSecondary,
-    marginTop: 3,
-  },
-  demoButtonGroup: {
-    gap: 8,
-  },
-  roleGroupLabel: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: THEME.colors.textMuted,
-    marginTop: 6,
-    textTransform: 'uppercase',
-  },
-  demoBtn: {
-    backgroundColor: THEME.colors.surface,
-    borderWidth: 1,
-    borderColor: THEME.colors.border,
-    padding: 10,
-    borderRadius: THEME.borderRadius.sm,
-  },
-  demoBtnTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: THEME.colors.textPrimary,
-  },
-  demoBtnDesc: {
-    fontSize: 11,
-    color: THEME.colors.textSecondary,
-    marginTop: 2,
-  },
-  adminBtn: {
-    backgroundColor: '#0F172A',
-    borderColor: '#334155',
-  },
-  adminBtnTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#38BDF8',
-  },
-  adminBtnDesc: {
-    fontSize: 11,
-    color: '#94A3B8',
-    marginTop: 2,
   },
 });
+

@@ -33,8 +33,9 @@ class User(Base):
     hashed_password = Column(String, nullable=False)
     role = Column(SQLEnum(UserRole), default=UserRole.PATIENT, nullable=False)
     avatar_url = Column(String, nullable=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
-    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
+
 
     # Relationships
     patient_profile = relationship("PatientProfile", back_populates="user", uselist=False, cascade="all, delete-orphan")
@@ -68,6 +69,13 @@ class DoctorProfile(Base):
     experience_years = Column(Integer, default=0)
     qualifications = Column(JSON, default=list)
     coverage_districts = Column(JSON, default=list)
+    bio = Column(String, nullable=True)
+    languages = Column(JSON, default=list)
+    consultation_fee_rwf = Column(Integer, default=25000)
+    travel_fee_rwf = Column(Integer, default=5000)
+    rating = Column(Integer, default=5)
+    review_count = Column(Integer, default=0)
     verification_status = Column(SQLEnum(DoctorVerificationStatus), default=DoctorVerificationStatus.PENDING, nullable=False)
 
     user = relationship("User", back_populates="doctor_profile")
+

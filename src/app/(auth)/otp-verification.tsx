@@ -96,11 +96,7 @@ export default function OtpVerificationScreen() {
         autoFocus
       />
 
-      <Pressable onPress={handleFastFill} style={styles.fastFillBox}>
-        <Text style={styles.fastFillText}>
-          Demo Hint: Tap here to insert demo code ({APP_CONFIG.demoOtpCode})
-        </Text>
-      </Pressable>
+
 
       <Button
         title="Verify & Continue"

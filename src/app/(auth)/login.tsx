@@ -15,10 +15,11 @@ import { InputField } from '../../components/ui/InputField';
 import { Button } from '../../components/ui/Button';
 
 export default function LoginScreen() {
-  const [identifier, setIdentifier] = useState('diane.uwase@example.rw');
-  const [password, setPassword] = useState('Password123!');
+  const [identifier, setIdentifier] = useState('');
+  const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const { loginCustom, isLoading } = useAuthStore();
+
 
   const handleLogin = async () => {
     if (!identifier.trim()) {

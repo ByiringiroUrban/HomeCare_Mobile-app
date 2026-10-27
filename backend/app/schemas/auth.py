@@ -81,10 +81,17 @@ class DoctorProfileResponse(BaseModel):
     experience_years: int
     qualifications: List[str] = []
     coverage_districts: List[str] = []
+    bio: Optional[str] = None
+    languages: List[str] = []
+    consultation_fee_rwf: int = 25000
+    travel_fee_rwf: int = 5000
+    rating: int = 5
+    review_count: int = 0
     verification_status: DoctorVerificationStatus
 
     class Config:
         from_attributes = True
+
 
 
 class UserResponse(BaseModel):

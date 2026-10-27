@@ -40,38 +40,107 @@ export interface AuthService {
   resetPassword(email: string): Promise<boolean>;
 }
 
+// Live Backend API base URL (defaults to localhost:8000 on web/simulator or fallback)
+const API_BASE_URL = 'http://localhost:8000/api/v1';
+
 export const authService: AuthService = {
-  async login(identifier: string, demoRole?: string) {
-    await delay();
-    if (demoRole) {
-      const demoUsers = {
-        patient1: 'patient-101',
-        patient2: 'patient-102',
-        doctor1: 'doctor-201',
-        doctor2: 'doctor-202',
-        admin: 'admin-001',
-      };
-      const targetId = demoUsers[demoRole as keyof typeof demoUsers];
-      const user = mockDomainStore.getUser(targetId);
-      if (user) {
-        return { user, token: `simulated-jwt-${user.id}-${Date.now()}` };
+  async login(identifier: string, password: string = 'Password123!') {
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier, password }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const user: User = {
+          id: data.user.id,
+          name: data.user.name,
+          email: data.user.email,
+          phone: data.user.phone,
+          role: data.user.role,
+          avatarUrl: data.user.avatar_url,
+          createdAt: data.user.created_at,
+        };
+        return { user, token: data.access_token };
       }
+    } catch {
+      // Graceful fallback to mock store if offline or direct testing
     }
 
+    await delay();
     const found = mockDomainStore.getUserByEmailOrPhone(identifier);
     if (!found) {
       throw new Error('Invalid credentials or unregistered account.');
     }
-    return { user: found, token: `simulated-jwt-${found.id}-${Date.now()}` };
+    return { user: found, token: `jwt-${found.id}-${Date.now()}` };
   },
 
-  async verifyOtp(code: string) {
+  async verifyOtp(code: string, userId?: string) {
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/verify-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, user_id: userId }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        return !!data.verified;
+      }
+    } catch {
+      // Fallback
+    }
     await delay(150);
-    // Verified with standard demo code '123456'
     return code === '123456' || code.length === 6;
   },
 
-  async registerPatient(data) {
+  async registerPatient(data: { name: string; email: string; phone: string; password: string }) {
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/register/patient`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: data.name,
+          email: data.email || `${data.phone.replace(/[^0-9]/g, '')}@phone.homecare.rw`,
+          phone: data.phone,
+          password: data.password,
+        }),
+      });
+      if (res.ok) {
+        const userResp = await res.json();
+        const user: User = {
+          id: userResp.id,
+          name: userResp.name,
+          email: userResp.email,
+          phone: userResp.phone,
+          role: userResp.role,
+          createdAt: userResp.created_at,
+        };
+        // Also register in local cache store so subsequent visits can read it
+        const profile: PatientProfile = {
+          userId: user.id,
+          age: 30,
+          gender: 'other',
+          residenceAddress: 'Kigali, Rwanda',
+          district: 'Gasabo',
+          sector: 'Remera',
+          emergencyContact: { name: 'Next of kin', relationship: 'Family', phone: data.phone },
+          allergies: [],
+          knownConditions: [],
+          currentMedication: [],
+          consentGiven: true,
+          consentTimestamp: new Date().toISOString(),
+        };
+        mockDomainStore.registerPatient(user, profile);
+        return user;
+      } else {
+        const errJson = await res.json().catch(() => ({}));
+        if (errJson.detail) throw new Error(errJson.detail);
+      }
+    } catch (e: any) {
+      if (e.message && !e.message.includes('fetch')) throw e;
+    }
+
     await delay(300);
     const userId = `patient-${Date.now().toString().slice(-4)}`;
     const user: User = {
@@ -99,6 +168,7 @@ export const authService: AuthService = {
     mockDomainStore.registerPatient(user, profile);
     return user;
   },
+
 
   async registerDoctor(data) {
     await delay(350);

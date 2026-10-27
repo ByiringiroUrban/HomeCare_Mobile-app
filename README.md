@@ -4,9 +4,107 @@
 ### 1. Project Overview & Architecture
 **HomeCare** is a mobile-first digital healthcare frontend built for residential medical consultations in Rwanda (default location: Kigali, prices in RWF). The application allows patients to find verified specialists, book home visits, track visit progression, view clinical summaries, and access downloadable lab results. Specialists can manage working hours and availability slots, review and accept/decline/propose alternative booking slots, execute visits via a step-by-step cockpit, and publish diagnostic records, electronic prescriptions (Rx), and lab specimen results.
 
-The frontend is built on **Expo (SDK 58)** with **React Native**, **Expo Router**, **TypeScript**, **Zustand**, and **TanStack React Query**, backed by a state-machine mock repository with Kigali demonstration fixtures and strict account isolation.
+The frontend is built on **Expo (SDK 58)** with **React Native**, **Expo Router**, **TypeScript**, **Zustand**, and **TanStack React Query**, backed by a state-machine mock repository with Kigali demonstration fixtures and strict account isolation. The backend is implemented with **Python (FastAPI)** and **PostgreSQL (Neon Serverless)** with async SQLAlchemy.
 
 ---
+
+## ⚡ Quick Start: How to Run the Project
+
+### Prerequisites
+- **Node.js**: v18 or later (Node 20+ recommended)
+- **npm** or **bun**
+- **Python**: 3.10+ (for backend)
+- **Expo Go App** (optional, installed on your iOS or Android device for mobile testing)
+
+---
+
+### Step 1: Clone & Install Frontend Dependencies
+
+From the project root directory:
+
+```bash
+# Install NPM dependencies
+npm install
+```
+
+---
+
+### Step 2: Start the Frontend Mobile / Web Application
+
+You can run the app in different environments using Expo:
+
+```bash
+# Start Expo Metro development server (interactive menu)
+npm start
+# or: npx expo start
+
+# Run directly in web browser (recommended for instant desktop demo)
+npm run web
+# or: npx expo start --web
+
+# Run on Android Emulator or connected USB device
+npm run android
+# or: npx expo start --android
+
+# Run on iOS Simulator (macOS only)
+npm run ios
+# or: npx expo start --ios
+```
+
+> **Testing on a Physical Mobile Device:**
+> 1. Download **Expo Go** from Google Play Store or Apple App Store.
+> 2. Run `npm start`.
+> 3. Scan the QR code shown in the terminal with your phone camera (iOS) or the Expo Go app (Android).
+> 4. Ensure your phone and computer are on the same Wi-Fi network (or press `s` to switch to Expo tunnel mode).
+
+---
+
+### Step 3: Run the Python & Neon PostgreSQL Backend
+
+The backend is located in the [`backend/`](file:///d:/New%20Downloads/Mobile-APP/backend) folder.
+
+```powershell
+# 1. (Optional) Create Python virtual environment if not already created
+python -m venv backend/venv
+
+# 2. Activate virtual environment
+# Windows PowerShell:
+.\backend\venv\Scripts\Activate.ps1
+# Mac / Linux:
+# source backend/venv/bin/activate
+
+# 3. Install backend dependencies
+pip install -r backend/requirements.txt
+
+# 4. Configure Database (.env)
+# Copy example if .env does not exist
+cp backend/.env.example backend/.env
+# Edit backend/.env and add your Neon PostgreSQL connection string:
+# DATABASE_URL=postgresql+asyncpg://neondb_owner:YOUR_PASSWORD@ep-xxx.neon.tech/neondb?ssl=require
+
+# 5. Run the FastAPI backend server
+python -m uvicorn app.main:app --reload --app-dir backend --port 8000
+```
+
+Once running, access:
+- **Interactive Swagger Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
+- **ReDoc Documentation**: [http://localhost:8000/redoc](http://localhost:8000/redoc)
+- **Health Check**: [http://localhost:8000/health](http://localhost:8000/health)
+
+---
+
+### Step 4: Run Verification Tests & Code Checks
+
+```powershell
+# Typecheck TypeScript (Frontend)
+npx tsc --noEmit
+
+# Run Backend End-to-End Auth Verification Tests
+$env:PYTHONPATH="backend"; .\backend\venv\Scripts\python.exe backend/verify_auth.py
+```
+
+---
+
 
 ### 2. Demo Accounts & How to Test
 

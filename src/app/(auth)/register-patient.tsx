@@ -17,9 +17,10 @@ import { Ionicons } from '@expo/vector-icons';
 export default function RegisterPatientScreen() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('+250 78');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [consentTerms, setConsentTerms] = useState(false);
+
   const [consentHealthData, setConsentHealthData] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [loading, setLoading] = useState(false);

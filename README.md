@@ -106,23 +106,35 @@ $env:PYTHONPATH="backend"; .\backend\venv\Scripts\python.exe backend/verify_auth
 ---
 
 
-### 2. Demo Accounts & How to Test
+### 2. Demo Accounts & Test Credentials
 
-Fast-track demo account buttons are accessible on the Welcome screen (`/(auth)/welcome`) and via the floating persistent top bar:
+Fast-track demo account buttons and auto-fill selectors are accessible on the Welcome screen (`/(auth)/welcome`), the Login screen (`/(auth)/login`), and via the persistent top bar (`👑 Admin` quick switch):
 
-| Role | Name | Identifier | Key Scenarios to Evaluate |
-|---|---|---|---|
-| **Patient 1** | Diane Uwase | `diane.uwase@example.rw` | Has 1 completed visit with published lab report & PDF viewer, plus 1 active "On the way" visit. Can book visits, rate doctors, and submit complaints. |
-| **Patient 2** | Jean-Paul Mugisha | `jp.mugisha@example.rw` | Has 1 pending visit request with Dr. Aline in Gikondo. Can test doctor alternative time proposals and cancellation. |
-| **Doctor 1** | Dr. Eric Kayitare | `dr.eric@homecare.rw` | General Medicine specialist. Active "On the way" visit with Diane Uwase. Can test navigation, visit transitions, and clinical workspace. |
-| **Doctor 2** | Dr. Aline Mukeshimana | `dr.aline@homecare.rw` | Pediatric specialist. Has incoming pending request from Jean-Paul Mugisha. Can test Accept, Decline, and Alternative Slot Proposal. |
-| **Admin** | Platform Admin | `admin@homecare.rw` | Platform management console. Review and approve/suspend doctor licenses, review complaints, view metrics, and inspect medical audit logs. |
+#### Testing Credentials Matrix
 
-*Note: The simulated OTP code is `123456`.*
+| Role | Name | Email (Identifier) | Phone | Test Password | Target Screen | Key Scenarios to Evaluate |
+|---|---|---|---|---|---|---|
+| **Admin** *(Priority)* | Platform Compliance Admin | `admin@homecare.rw` | `+250 788 000 111` / `+250788999000` | `AdminHomeCare2026!` *(or `Password123!`)* | `/(admin)` | **Doctor verification (approve/suspend RMDC licenses)**, patient complaints triage, immutable medical record audit logs, visits & revenue analytics. |
+| **Doctor 1** | Dr. Eric Kayitare | `dr.eric@homecare.rw` | `+250 788 331 445` | `Doctor123!` *(or `Password123!`)* | `/(doctor)` | General Medicine specialist. Active "On the way" visit with Diane Uwase. Test navigation, status transitions, clinical notes, prescriptions, and lab specimen order. |
+| **Doctor 2** | Dr. Aline Mukeshimana | `dr.aline@homecare.rw` | `+250 788 902 334` | `Doctor123!` *(or `Password123!`)* | `/(doctor)` | Pediatric specialist. Incoming pending request from Jean-Paul Mugisha. Test Accept, Decline, and Alternative Slot Proposal. |
+| **Patient 1** | Diane Uwase | `diane.uwase@example.rw` | `+250 788 412 901` | `Password123!` | `/(patient)` | Has 1 completed visit with published lab report & PDF viewer, plus 1 active "On the way" visit. Test specialist search, booking, rating, and complaint filing. |
+| **Patient 2** | Jean-Paul Mugisha | `jp.mugisha@example.rw` | `+250 783 552 119` | `Password123!` | `/(patient)` | Has 1 pending visit request with Dr. Aline in Gikondo. Test doctor alternative time proposals, review, and cancellation. |
+
+> [!NOTE]
+> - **Simulated 2FA / SMS OTP**: `123456` (accepted across all verification screens).
+> - **In-App Quick Fill**: On the login screen (`/(auth)/login`), tap **"Auto-Fill Admin"** or **"Sign In as Admin ›"** for instant 1-tap evaluation without typing credentials.
+> - **Welcome Screen Fast-Track**: The welcome screen (`/(auth)/welcome`) features dedicated 1-tap launch buttons for Admin Console, Doctor Workspace, and Patient App.
+
+#### Admin Portal Evaluation Guide (`/(admin)`)
+1. **Access the Console**: Log in using `admin@homecare.rw` / `AdminHomeCare2026!` (or click **"Sign In as Admin"** / **"👑 Admin"** top-bar button).
+2. **Tab 1: Platform Metrics (FR-10.3)**: Inspect live counts of completed visits, active doctors, registered patients, total revenue in RWF, and average rating.
+3. **Tab 2: Doctor Verification & RMDC Licenses (FR-10.1)**: Review doctor profiles, license numbers (e.g. `RMDC/2019/G-8821`), qualifications, and coverage districts. Click **"Approve"** or **"Suspend"** to toggle doctor practice privileges in real time.
+4. **Tab 3: Complaints Resolution (FR-10.4)**: Triage patient grievance reports with severity badges (`Urgent`, `Medium`), visit references, and timestamps.
+5. **Tab 4: Immutable Medical Record Audit Trail (FR-10.5)**: Review SHA-256 hash-verified logs of clinical consultation records and specimen lab results for Rwandan health data compliance.
 
 ---
 
-### 3. Screen & Route Inventory
+### 3. Screen & Route Inventory![alt text](image.png)
 
 #### Authentication (`src/app/(auth)`)
 - `welcome.tsx`: Brand intro, emergency notice, quick demo role selectors, and navigation to auth flows.
@@ -249,3 +261,4 @@ When we proceed to the backend implementation phase with Node.js and Neon Postgr
 3. **Double Booking Guard**: Checked that the domain store rejects overlapping slot reservations for the same doctor.
 4. **Cancellation Restrictions**: Validated that patients are prevented from cancelling once the doctor status is `on_the_way`, `arrived`, or `in_consultation`.
 5. **Operating System Compatibility**: Built and verified for Expo SDK 58 (Node 22 / React 19 / React Native 0.88). Current Expo 58 tools require iOS 15.1+ and Android 8.0+ (API 26), ensuring standard compliance with the SRS targets.
+6. **Backend End-to-End Auth Verification Tests (`backend/verify_auth.py`)**: **Exited with code 0**. Validated cryptographic password hashing, JWT generation, and Admin credentials verification.

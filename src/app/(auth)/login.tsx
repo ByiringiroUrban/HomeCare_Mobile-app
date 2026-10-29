@@ -1,4 +1,4 @@
-// Login Screen with Identifier and Quick Password Reset
+// Login Screen
 import React, { useState } from 'react';
 import {
   View,
@@ -20,7 +20,6 @@ export default function LoginScreen() {
   const [errorMsg, setErrorMsg] = useState('');
   const { loginCustom, isLoading } = useAuthStore();
 
-
   const handleLogin = async () => {
     if (!identifier.trim()) {
       setErrorMsg('Please enter your email or phone number.');
@@ -33,7 +32,7 @@ export default function LoginScreen() {
 
     setErrorMsg('');
     try {
-      const user = await loginCustom(identifier.trim());
+      const user = await loginCustom(identifier.trim(), password.trim());
       if (user.role === 'patient') {
         router.replace('/(patient)');
       } else if (user.role === 'doctor') {
@@ -66,7 +65,7 @@ export default function LoginScreen() {
 
       <InputField
         label="Email or Phone Number"
-        placeholder="e.g. diane.uwase@example.rw or +250 788 412 901"
+        placeholder="e.g. email@example.com or +250 788 000 000"
         value={identifier}
         onChangeText={setIdentifier}
         autoCapitalize="none"
@@ -101,14 +100,6 @@ export default function LoginScreen() {
           <Text style={styles.signUpLink}>Register as Patient</Text>
         </Pressable>
       </View>
-
-      <View style={styles.helperCard}>
-        <Text style={styles.helperTitle}>Quick Test Credentials:</Text>
-        <Text style={styles.helperText}>Patient 1: diane.uwase@example.rw</Text>
-        <Text style={styles.helperText}>Doctor 1: dr.eric@homecare.rw</Text>
-        <Text style={styles.helperText}>Admin: admin@homecare.rw</Text>
-        <Text style={styles.helperText}>Any password accepted for testing.</Text>
-      </View>
     </ScrollView>
   );
 }
@@ -118,6 +109,7 @@ const styles = StyleSheet.create({
     padding: THEME.spacing.base,
     backgroundColor: THEME.colors.background,
     flexGrow: 1,
+    paddingBottom: THEME.spacing.xxl,
   },
   header: {
     marginBottom: THEME.spacing.lg,
@@ -166,7 +158,8 @@ const styles = StyleSheet.create({
   footerRow: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: THEME.spacing.md,
+    marginTop: THEME.spacing.sm,
+    marginBottom: THEME.spacing.lg,
   },
   footerText: {
     fontSize: 13,
@@ -176,22 +169,5 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     color: THEME.colors.primary,
-  },
-  helperCard: {
-    marginTop: THEME.spacing.xl,
-    padding: 12,
-    backgroundColor: THEME.colors.surfaceSubtle,
-    borderRadius: THEME.borderRadius.md,
-  },
-  helperTitle: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: THEME.colors.textPrimary,
-    marginBottom: 4,
-  },
-  helperText: {
-    fontSize: 11,
-    color: THEME.colors.textSecondary,
-    lineHeight: 16,
   },
 });

@@ -16,8 +16,6 @@ import { Button } from '../../components/ui/Button';
 import { EmergencyBanner } from '../../components/ui/EmergencyBanner';
 
 export default function WelcomeScreen() {
-
-
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -86,7 +84,6 @@ export default function WelcomeScreen() {
     </SafeAreaView>
   );
 }
-
 
 const styles = StyleSheet.create({
   safeArea: {
@@ -183,4 +180,3 @@ const styles = StyleSheet.create({
     color: THEME.colors.primary,
   },
 });
-

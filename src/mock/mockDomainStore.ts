@@ -500,6 +500,15 @@ class MockDomainStore {
     );
   }
 
+  public resolveComplaint(complaintId: string, resolutionNotes: string): ComplaintReport | undefined {
+    const complaint = this.complaints.get(complaintId);
+    if (!complaint) return undefined;
+    complaint.status = 'resolved';
+    complaint.resolutionNotes = resolutionNotes;
+    this.complaints.set(complaintId, complaint);
+    return complaint;
+  }
+
   // --- Audit Logs ---
   public getAuditLogs(): MedicalAuditLog[] {
     return [...this.auditLogs].sort(

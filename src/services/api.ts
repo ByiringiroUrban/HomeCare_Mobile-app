@@ -15,7 +15,7 @@ import {
   MedicalAuditLog,
   VisitStatus,
 } from '../types/domain';
-import { SpecialtyItem } from '../mock/fixtures';
+import { SpecialtyItem, DEMO_USERS } from '../mock/fixtures';
 import { mockDomainStore } from '../mock/mockDomainStore';
 
 const SIMULATED_LATENCY_MS = 250;
@@ -44,12 +44,34 @@ export interface AuthService {
 const API_BASE_URL = 'http://localhost:8000/api/v1';
 
 export const authService: AuthService = {
-  async login(identifier: string, password: string = 'Password123!') {
+  async login(identifier: string, passwordOrRole: string = 'Password123!') {
+    // Check if identifier or passwordOrRole corresponds to a known demo user key
+    let demoKey: string | undefined;
+    if (identifier && identifier in DEMO_USERS) {
+      demoKey = identifier;
+    } else if (passwordOrRole && passwordOrRole in DEMO_USERS) {
+      demoKey = passwordOrRole;
+    }
+
+    let effectiveIdentifier = identifier;
+    let effectivePassword = passwordOrRole;
+
+    if (demoKey && DEMO_USERS[demoKey]) {
+      effectiveIdentifier = DEMO_USERS[demoKey].email;
+      if (demoKey === 'admin') {
+        effectivePassword = 'AdminHomeCare2026!';
+      } else if (demoKey.startsWith('doctor')) {
+        effectivePassword = 'Doctor123!';
+      } else {
+        effectivePassword = 'Password123!';
+      }
+    }
+
     try {
       const res = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ identifier, password }),
+        body: JSON.stringify({ identifier: effectiveIdentifier, password: effectivePassword }),
       });
       if (res.ok) {
         const data = await res.json();
@@ -69,7 +91,12 @@ export const authService: AuthService = {
     }
 
     await delay();
-    const found = mockDomainStore.getUserByEmailOrPhone(identifier);
+    if (demoKey && DEMO_USERS[demoKey]) {
+      const user = DEMO_USERS[demoKey];
+      return { user, token: `jwt-${user.id}-${Date.now()}` };
+    }
+
+    const found = mockDomainStore.getUserByEmailOrPhone(effectiveIdentifier);
     if (!found) {
       throw new Error('Invalid credentials or unregistered account.');
     }
@@ -562,6 +589,7 @@ export interface AdminService {
   updateDoctorVerification(doctorId: string, status: 'approved' | 'pending' | 'suspended'): Promise<DoctorProfile>;
   getAllVisits(): Promise<VisitRequest[]>;
   getComplaints(): Promise<ComplaintReport[]>;
+  resolveComplaint(complaintId: string, resolutionNotes: string): Promise<ComplaintReport | undefined>;
   getAuditLogs(): Promise<MedicalAuditLog[]>;
   getPlatformMetrics(): Promise<{
     totalVisits: number;
@@ -592,6 +620,11 @@ export const adminService: AdminService = {
   async getComplaints() {
     await delay(150);
     return mockDomainStore.getComplaints();
+  },
+
+  async resolveComplaint(complaintId: string, resolutionNotes: string) {
+    await delay(200);
+    return mockDomainStore.resolveComplaint(complaintId, resolutionNotes);
   },
 
   async getAuditLogs() {

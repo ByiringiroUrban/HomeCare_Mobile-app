@@ -23,14 +23,31 @@ function DemoSwitchBanner() {
 
   if (!currentUser) return null;
 
+  const switchTo = async (roleKey: 'admin' | 'doctor1' | 'patient1') => {
+    try {
+      const u = await loginDemo(roleKey);
+      if (u.role === 'patient') router.replace('/(patient)');
+      else if (u.role === 'doctor') router.replace('/(doctor)');
+      else if (u.role === 'admin') router.replace('/(admin)');
+    } catch {
+      logout();
+      router.replace('/(auth)/welcome');
+    }
+  };
+
   return (
     <View style={styles.demoBar}>
       <View style={styles.userBadge}>
-        <Text style={styles.roleTag}>
+        <Text style={styles.roleTag} numberOfLines={1}>
           {currentUser.role.toUpperCase()}: {currentUser.name}
         </Text>
       </View>
       <View style={styles.actions}>
+        {currentUser.role !== 'admin' && (
+          <Pressable onPress={() => switchTo('admin')} style={[styles.actionBtn, styles.adminQuickBtn]}>
+            <Text style={styles.adminQuickText}>👑 Admin</Text>
+          </Pressable>
+        )}
         <Pressable
           onPress={() => {
             resetDemoData();
@@ -38,7 +55,7 @@ function DemoSwitchBanner() {
           }}
           style={styles.actionBtn}
         >
-          <Text style={styles.actionText}>Reset Data</Text>
+          <Text style={styles.actionText}>Reset</Text>
         </Pressable>
         <Pressable
           onPress={() => {
@@ -47,7 +64,7 @@ function DemoSwitchBanner() {
           }}
           style={[styles.actionBtn, styles.logoutBtn]}
         >
-          <Text style={styles.logoutText}>Switch Account</Text>
+          <Text style={styles.logoutText}>Switch</Text>
         </Pressable>
       </View>
     </View>
@@ -125,6 +142,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#B91C1C',
   },
   logoutText: {
+    color: '#FFF',
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  adminQuickBtn: {
+    backgroundColor: '#D97706',
+  },
+  adminQuickText: {
     color: '#FFF',
     fontSize: 10,
     fontWeight: '700',

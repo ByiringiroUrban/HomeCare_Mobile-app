@@ -14,7 +14,7 @@ interface AuthSessionState {
 
   // Actions
   loginDemo: (role: 'patient1' | 'patient2' | 'doctor1' | 'doctor2' | 'admin') => Promise<User>;
-  loginCustom: (identifier: string) => Promise<User>;
+  loginCustom: (identifier: string, password?: string) => Promise<User>;
   logout: () => void;
   refreshProfile: () => Promise<void>;
   resetDemoData: () => void;
@@ -55,10 +55,10 @@ export const useAuthStore = create<AuthSessionState>((set, get) => ({
     }
   },
 
-  loginCustom: async (identifier) => {
+  loginCustom: async (identifier, password) => {
     set({ isLoading: true, error: null });
     try {
-      const { user, token } = await authService.login(identifier);
+      const { user, token } = await authService.login(identifier, password);
       let pProfile: PatientProfile | null = null;
       let dProfile: DoctorProfile | null = null;
 

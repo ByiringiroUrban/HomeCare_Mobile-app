@@ -61,30 +61,10 @@ npm run ios
 
 ### Step 3: Run the Python & Neon PostgreSQL Backend
 
-The backend is located in the [`backend/`](file:///d:/New%20Downloads/Mobile-APP/backend) folder.
+cd "D:\New Downloads\Mobile-APP\backend"
+.\venv\Scripts\Activate.ps1
+uvicorn app.main:app --reload --port 8000
 
-```powershell
-# 1. (Optional) Create Python virtual environment if not already created
-python -m venv backend/venv
-
-# 2. Activate virtual environment
-# Windows PowerShell:
-.\backend\venv\Scripts\Activate.ps1
-# Mac / Linux:
-# source backend/venv/bin/activate
-
-# 3. Install backend dependencies
-pip install -r backend/requirements.txt
-
-# 4. Configure Database (.env)
-# Copy example if .env does not exist
-cp backend/.env.example backend/.env
-# Edit backend/.env and add your Neon PostgreSQL connection string:
-# DATABASE_URL=postgresql+asyncpg://neondb_owner:YOUR_PASSWORD@ep-xxx.neon.tech/neondb?ssl=require
-
-# 5. Run the FastAPI backend server
-python -m uvicorn app.main:app --reload --app-dir backend --port 8000
-```
 
 Once running, access:
 - **Interactive Swagger Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)

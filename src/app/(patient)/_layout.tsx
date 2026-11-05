@@ -1,9 +1,21 @@
 import React from 'react';
+import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { THEME } from '../../constants/theme';
+import { useProtectedRoute } from '../../hooks/useProtectedRoute';
 
 export default function PatientTabsLayout() {
+  const isAuthorised = useProtectedRoute('patient');
+
+  if (!isAuthorised) {
+    return (
+      <View style={styles.loading}>
+        <ActivityIndicator size="large" color={THEME.colors.primary} />
+      </View>
+    );
+  }
+
   return (
     <Tabs
       screenOptions={{
@@ -94,3 +106,12 @@ export default function PatientTabsLayout() {
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  loading: {
+    flex: 1,
+    backgroundColor: THEME.colors.background,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});

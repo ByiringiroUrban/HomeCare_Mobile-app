@@ -1,4 +1,5 @@
 // Domain Entities for HomeCare Mobile & Web Application
+// Supports East African markets: Rwanda (RWF), Kenya (KES), Tanzania (TZS)
 // Sourced from SRS Version 1.0 Draft
 
 export type UserRole = 'patient' | 'doctor' | 'admin';
@@ -21,7 +22,7 @@ export type SampleStatus = 'collected' | 'delivered' | 'processing' | 'completed
 
 export type PatientResultStatus = 'pending_sample' | 'in_lab' | 'available';
 
-export type PaymentMethod = 'momo' | 'airtel' | 'card' | 'cash_on_visit';
+export type PaymentMethod = 'momo' | 'mpesa' | 'tigopesa' | 'airtel' | 'card' | 'cash_on_visit';
 
 export type PaymentStatus = 'pending' | 'completed' | 'refunded' | 'failed';
 
@@ -40,8 +41,10 @@ export interface PatientProfile {
   age: number;
   gender: 'male' | 'female' | 'other';
   residenceAddress: string;
+  city: string;
+  country: string;          // ISO 2-letter: 'RW' | 'KE' | 'TZ'
   district: string;
-  sector: string;
+  sector?: string;
   coordinates?: { latitude: number; longitude: number };
   emergencyContact: {
     name: string;
@@ -66,10 +69,13 @@ export interface DoctorProfile {
   qualifications: string[];
   experienceYears: number;
   coverageDistricts: string[];
+  city: string;
+  country: string;          // ISO 2-letter: 'RW' | 'KE' | 'TZ'
   bio: string;
   languages: string[];
-  consultationFeeRwf: number;
+  consultationFeeRwf: number;   // stored in local currency units
   travelFeeRwf: number;
+  currency: string;             // 'RWF' | 'KES' | 'TZS'
   rating: number;
   reviewCount: number;
   verificationStatus: DoctorVerificationStatus;

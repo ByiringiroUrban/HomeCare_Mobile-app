@@ -1,18 +1,71 @@
 // Centralized configuration and design system tokens for HomeCare
+// Supported East African markets: Rwanda (RW), Kenya (KE), Tanzania (TZ)
+
+export type SupportedCountry = 'RW' | 'KE' | 'TZ';
+
+export interface CountryConfig {
+  name: string;
+  code: SupportedCountry;
+  currency: string;
+  currencySymbol: string;
+  emergencyPhone: string;
+  emergencyService: string;
+  phonePrefix: string;
+  phonePlaceholder: string;
+  regulatoryBody: string;
+  exampleCities: string[];
+}
+
+export const COUNTRY_CONFIGS: Record<SupportedCountry, CountryConfig> = {
+  RW: {
+    name: 'Rwanda',
+    code: 'RW',
+    currency: 'RWF',
+    currencySymbol: 'RWF',
+    emergencyPhone: '912',
+    emergencyService: 'SAMU Rwanda',
+    phonePrefix: '+250',
+    phonePlaceholder: '+250 788 000 000',
+    regulatoryBody: 'Rwanda Medical and Dental Council (RMDC)',
+    exampleCities: ['Kigali', 'Butare', 'Gisenyi', 'Ruhengeri'],
+  },
+  KE: {
+    name: 'Kenya',
+    code: 'KE',
+    currency: 'KES',
+    currencySymbol: 'KSh',
+    emergencyPhone: '999',
+    emergencyService: 'Kenya Emergency Services',
+    phonePrefix: '+254',
+    phonePlaceholder: '+254 712 000 000',
+    regulatoryBody: 'Kenya Medical Practitioners & Dentists Council (KMPDC)',
+    exampleCities: ['Nairobi', 'Mombasa', 'Kisumu', 'Nakuru'],
+  },
+  TZ: {
+    name: 'Tanzania',
+    code: 'TZ',
+    currency: 'TZS',
+    currencySymbol: 'TSh',
+    emergencyPhone: '114',
+    emergencyService: 'Tanzania Emergency Services',
+    phonePrefix: '+255',
+    phonePlaceholder: '+255 712 000 000',
+    regulatoryBody: 'Medical Council of Tanganyika (MCT)',
+    exampleCities: ['Dar es Salaam', 'Arusha', 'Mwanza', 'Dodoma'],
+  },
+};
+
 export const APP_CONFIG = {
   appName: 'HomeCare',
-  appVersion: '1.0.0-draft',
-  tagline: 'Personalized Doctor Home Visits in Kigali',
-  defaultCountry: 'Rwanda',
-  defaultCity: 'Kigali',
-  currency: 'RWF',
-  emergencyDisclaimer:
-    'HomeCare is not an emergency service. In life-threatening emergencies, immediately call 112 (SAMU Rwanda / Emergency Helpline).',
-  emergencyPhone: '112',
-  supportEmail: 'support@homecare.rw',
+  appVersion: '1.0.0',
+  tagline: 'Certified Doctor Home Visits Across East Africa',
+  supportedCountries: ['RW', 'KE', 'TZ'] as SupportedCountry[],
+  supportEmail: 'support@homecare.africa',
   supportPhone: '+250 788 123 456',
   demoOtpCode: '123456',
-  coverageDistricts: ['Gasabo', 'Kicukiro', 'Nyarugenge'],
+  // Generic emergency disclaimer used when country is unknown
+  emergencyDisclaimer:
+    'HomeCare is not an emergency service. In life-threatening emergencies, dial your national emergency number immediately.',
 };
 
 export const THEME = {

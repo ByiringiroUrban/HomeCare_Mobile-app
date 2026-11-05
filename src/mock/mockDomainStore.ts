@@ -1,5 +1,4 @@
-// In-memory persistent reactive mock database store with account isolation and domain events
-import {
+// In-memory persistent reactive mock database store with account isolation and domain eventsimport {
   User,
   PatientProfile,
   DoctorProfile,
@@ -47,12 +46,22 @@ class MockDomainStore {
   private auditLogs: MedicalAuditLog[] = [];
   private specialties: SpecialtyItem[] = [];
 
-  // System Config
+  // System Config — East Africa multi-country
   public platformConfig = {
-    emergencyPhone: '112',
+    // Emergency numbers by country
+    emergencyPhones: { RW: '912', KE: '999', TZ: '114' },
+    emergencyPhone: '912', // Rwanda default
     cancellationWindowHours: 2,
     baseTravelFeeRwf: 5000,
-    coverageDistricts: ['Gasabo', 'Kicukiro', 'Nyarugenge'],
+    // Coverage cities across East Africa
+    coverageDistricts: [
+      // Rwanda
+      'Gasabo', 'Kicukiro', 'Nyarugenge',
+      // Kenya
+      'Nairobi CBD', 'Westlands', 'Kilimani', 'Mombasa Island',
+      // Tanzania
+      'Kinondoni', 'Ilala', 'Temeke', 'Arusha City',
+    ],
   };
 
   constructor() {

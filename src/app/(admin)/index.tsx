@@ -14,6 +14,7 @@ import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
+import type { ComponentProps } from 'react';
 import { THEME } from '../../constants/theme';
 import { useAuthStore } from '../../stores/authStore';
 import { adminService } from '../../services/api';
@@ -24,6 +25,37 @@ import { Badge } from '../../components/ui/Badge';
 type TabType = 'metrics' | 'doctors' | 'complaints' | 'audit';
 type DoctorFilterType = 'all' | 'pending' | 'approved' | 'suspended';
 type ComplaintFilterType = 'all' | 'open' | 'resolved';
+type IoniconName = ComponentProps<typeof Ionicons>['name'];
+
+function IconWell({
+  name,
+  color = THEME.colors.primary,
+  backgroundColor = THEME.colors.primarySoft,
+  size = 38,
+  iconSize = 18,
+}: {
+  name: IoniconName;
+  color?: string;
+  backgroundColor?: string;
+  size?: number;
+  iconSize?: number;
+}) {
+  return (
+    <View
+      style={[
+        styles.iconWell,
+        {
+          width: size,
+          height: size,
+          borderRadius: size / 2,
+          backgroundColor,
+        },
+      ]}
+    >
+      <Ionicons name={name} size={iconSize} color={color} />
+    </View>
+  );
+}
 
 export default function AdminConsoleScreen() {
   const { logout, resetDemoData } = useAuthStore();
@@ -82,7 +114,12 @@ export default function AdminConsoleScreen() {
     }
   };
 
-  // Filtered lists
+  const handleResetDemo = () => {
+    resetDemoData();
+    onRefresh();
+    Alert.alert('Data Reset', 'Demo data has been restored to default state.');
+  };
+
   const filteredDoctors = doctors.filter((d) => {
     if (doctorFilter === 'all') return true;
     return d.verificationStatus === doctorFilter;
@@ -106,347 +143,311 @@ export default function AdminConsoleScreen() {
         contentContainerStyle={styles.scrollContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[THEME.colors.primary]} />}
       >
-        {/* Admin Header with Official Logo & Actions */}
-        <View style={styles.topHeader}>
-          <View style={styles.headerLeftCol}>
-            <Image
-              source={require('../../../assets/homecare-logo.png')}
-              style={styles.logoImage}
-              resizeMode="contain"
-            />
-            <View style={styles.adminRoleRow}>
-              <View style={styles.adminCrownBadge}>
-                <Ionicons name="shield-checkmark" size={13} color="#B45309" />
-                <Text style={styles.adminCrownText}>Platform Administrator</Text>
-              </View>
-              <Text style={styles.kigaliRegionText}>Kigali Healthcare Network</Text>
-            </View>
-          </View>
-
-          <View style={styles.headerActionsRow}>
-            <Pressable
-              style={styles.headerActionBtn}
-              onPress={() => {
-                resetDemoData();
-                onRefresh();
-                Alert.alert('Data Reset', 'Demo data has been restored to default state.');
-              }}
-            >
-              <Ionicons name="refresh-outline" size={15} color="#475569" />
-              <Text style={styles.headerActionBtnText}>Reset</Text>
+        <View style={styles.brandRow}>
+          <Image
+            source={require('../../../assets/homecare-logo.png')}
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
+          <View style={styles.brandActions}>
+            <Pressable style={styles.iconBtn} onPress={handleResetDemo}>
+              <Ionicons name="refresh-outline" size={20} color={THEME.colors.textPrimary} />
             </Pressable>
-
             <Pressable
-              style={[styles.headerActionBtn, styles.signOutBtn]}
+              style={styles.iconBtn}
               onPress={() => {
                 logout();
                 router.replace('/(auth)/welcome');
               }}
             >
-              <Ionicons name="log-out-outline" size={15} color="#DC2626" />
-              <Text style={styles.signOutBtnText}>Sign Out</Text>
+              <Ionicons name="log-out-outline" size={20} color={THEME.colors.error} />
             </Pressable>
           </View>
         </View>
 
-        {/* Quick Highlights Summary Bar (Tappable Quick Jump) */}
+        <View style={styles.header}>
+          <Text style={styles.greeting}>Platform Admin</Text>
+          <View style={styles.locationRow}>
+            <Ionicons name="location-sharp" size={13} color={THEME.colors.primary} style={{ marginRight: 3 }} />
+            <Text style={styles.locationText}>Kigali Healthcare Network</Text>
+          </View>
+        </View>
+
         <View style={styles.summaryBar}>
           <Pressable
-            style={[styles.summaryPill, activeTab === 'doctors' && styles.summaryPillActive]}
+            style={[styles.summaryChip, activeTab === 'doctors' && doctorFilter !== 'pending' && styles.summaryChipActive]}
             onPress={() => setActiveTab('doctors')}
           >
-            <Ionicons name="medkit-outline" size={15} color={activeTab === 'doctors' ? '#FFFFFF' : THEME.colors.primary} />
-            <Text style={[styles.summaryPillNumber, activeTab === 'doctors' && styles.summaryPillTextActive]}>
+            <IconWell
+              name="medkit-outline"
+              size={36}
+              iconSize={17}
+              color={activeTab === 'doctors' && doctorFilter !== 'pending' ? THEME.colors.textWhite : THEME.colors.primary}
+              backgroundColor={
+                activeTab === 'doctors' && doctorFilter !== 'pending'
+                  ? 'rgba(255,255,255,0.18)'
+                  : THEME.colors.primarySoft
+              }
+            />
+            <Text
+              style={[
+                styles.summaryNumber,
+                activeTab === 'doctors' && doctorFilter !== 'pending' && styles.summaryTextActive,
+              ]}
+            >
               {doctors.length}
             </Text>
-            <Text style={[styles.summaryPillLabel, activeTab === 'doctors' && styles.summaryPillTextActive]}>
+            <Text
+              style={[
+                styles.summaryLabel,
+                activeTab === 'doctors' && doctorFilter !== 'pending' && styles.summaryTextActive,
+              ]}
+            >
               Doctors
             </Text>
           </Pressable>
 
           <Pressable
-            style={[styles.summaryPill, activeTab === 'doctors' && doctorFilter === 'pending' && styles.summaryPillActive]}
+            style={[styles.summaryChip, activeTab === 'doctors' && doctorFilter === 'pending' && styles.summaryChipActive]}
             onPress={() => {
               setActiveTab('doctors');
               setDoctorFilter('pending');
             }}
           >
-            <Ionicons name="hourglass-outline" size={15} color={pendingDoctorsCount > 0 ? '#D97706' : '#64748B'} />
-            <Text style={[styles.summaryPillNumber, { color: pendingDoctorsCount > 0 ? '#D97706' : '#64748B' }]}>
+            <IconWell
+              name="time-outline"
+              size={36}
+              iconSize={17}
+              color={pendingDoctorsCount > 0 ? THEME.colors.warning : THEME.colors.textMuted}
+              backgroundColor={pendingDoctorsCount > 0 ? THEME.colors.warningSoft : THEME.colors.surfaceSubtle}
+            />
+            <Text style={[styles.summaryNumber, pendingDoctorsCount > 0 && { color: THEME.colors.warning }]}>
               {pendingDoctorsCount}
             </Text>
-            <Text style={styles.summaryPillLabel}>Pending</Text>
+            <Text style={styles.summaryLabel}>Pending</Text>
           </Pressable>
 
           <Pressable
-            style={[styles.summaryPill, activeTab === 'complaints' && styles.summaryPillActive]}
+            style={[styles.summaryChip, activeTab === 'complaints' && styles.summaryChipActive]}
             onPress={() => setActiveTab('complaints')}
           >
-            <Ionicons name="alert-circle-outline" size={15} color={pendingComplaintsCount > 0 ? '#DC2626' : '#16A34A'} />
-            <Text style={[styles.summaryPillNumber, { color: pendingComplaintsCount > 0 ? '#DC2626' : '#16A34A' }]}>
+            <IconWell
+              name="chatbox-ellipses-outline"
+              size={36}
+              iconSize={17}
+              color={
+                activeTab === 'complaints'
+                  ? THEME.colors.textWhite
+                  : pendingComplaintsCount > 0
+                    ? THEME.colors.error
+                    : THEME.colors.success
+              }
+              backgroundColor={
+                activeTab === 'complaints'
+                  ? 'rgba(255,255,255,0.18)'
+                  : pendingComplaintsCount > 0
+                    ? THEME.colors.errorSoft
+                    : THEME.colors.successSoft
+              }
+            />
+            <Text
+              style={[
+                styles.summaryNumber,
+                activeTab === 'complaints' && styles.summaryTextActive,
+                activeTab !== 'complaints' && {
+                  color: pendingComplaintsCount > 0 ? THEME.colors.error : THEME.colors.success,
+                },
+              ]}
+            >
               {complaints.length}
             </Text>
-            <Text style={styles.summaryPillLabel}>Complaints</Text>
+            <Text style={[styles.summaryLabel, activeTab === 'complaints' && styles.summaryTextActive]}>
+              Complaints
+            </Text>
           </Pressable>
 
           <Pressable
-            style={[styles.summaryPill, activeTab === 'audit' && styles.summaryPillActive]}
+            style={[styles.summaryChip, activeTab === 'audit' && styles.summaryChipActive]}
             onPress={() => setActiveTab('audit')}
           >
-            <Ionicons name="shield-checkmark-outline" size={15} color="#0D9488" />
-            <Text style={[styles.summaryPillNumber, { color: '#0D9488' }]}>
+            <IconWell
+              name="shield-checkmark-outline"
+              size={36}
+              iconSize={17}
+              color={activeTab === 'audit' ? THEME.colors.textWhite : THEME.colors.primary}
+              backgroundColor={activeTab === 'audit' ? 'rgba(255,255,255,0.18)' : THEME.colors.primarySoft}
+            />
+            <Text style={[styles.summaryNumber, activeTab === 'audit' && styles.summaryTextActive]}>
               {auditLogs.length}
             </Text>
-            <Text style={styles.summaryPillLabel}>Audit Logs</Text>
+            <Text style={[styles.summaryLabel, activeTab === 'audit' && styles.summaryTextActive]}>Audit</Text>
           </Pressable>
         </View>
 
-        {/* Responsive Horizontal Scroll Tab Bar with Icons & Counts */}
-        <View style={styles.tabContainer}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.tabScrollContent}
-          >
-            {/* Tab 1: Platform Metrics */}
-            <Pressable
-              style={[styles.tabPill, activeTab === 'metrics' && styles.tabPillActive]}
-              onPress={() => setActiveTab('metrics')}
-            >
-              <View style={[styles.tabIconBox, activeTab === 'metrics' && styles.tabIconBoxActive]}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.tabScrollContent}
+          style={styles.tabContainer}
+        >
+          {(
+            [
+              { id: 'metrics' as const, label: 'Overview', icon: 'home-outline', iconActive: 'home' },
+              { id: 'doctors' as const, label: 'Doctors', icon: 'medkit-outline', iconActive: 'medkit', count: doctors.length },
+              {
+                id: 'complaints' as const,
+                label: 'Complaints',
+                icon: 'chatbox-ellipses-outline',
+                iconActive: 'chatbox-ellipses',
+                count: pendingComplaintsCount || undefined,
+                warn: pendingComplaintsCount > 0,
+              },
+              { id: 'audit' as const, label: 'Audit', icon: 'document-text-outline', iconActive: 'document-text', count: auditLogs.length },
+            ] as const
+          ).map((tab) => {
+            const focused = activeTab === tab.id;
+            return (
+              <Pressable
+                key={tab.id}
+                style={[styles.tabPill, focused && styles.tabPillActive]}
+                onPress={() => setActiveTab(tab.id)}
+              >
                 <Ionicons
-                  name={activeTab === 'metrics' ? 'stats-chart' : 'stats-chart-outline'}
+                  name={(focused ? tab.iconActive : tab.icon) as IoniconName}
                   size={16}
-                  color={activeTab === 'metrics' ? '#FFFFFF' : THEME.colors.primary}
+                  color={focused ? THEME.colors.primary : THEME.colors.textMuted}
                 />
-              </View>
-              <Text style={[styles.tabLabel, activeTab === 'metrics' && styles.tabLabelActive]}>
-                Platform Metrics
-              </Text>
-            </Pressable>
+                <Text style={[styles.tabLabel, focused && styles.tabLabelActive]}>{tab.label}</Text>
+                {'count' in tab && tab.count !== undefined && (
+                  <View style={[styles.tabBadge, focused && styles.tabBadgeActive, 'warn' in tab && tab.warn && !focused && styles.tabBadgeWarn]}>
+                    <Text
+                      style={[
+                        styles.tabBadgeText,
+                        focused && styles.tabBadgeTextActive,
+                        'warn' in tab && tab.warn && !focused && styles.tabBadgeTextWarn,
+                      ]}
+                    >
+                      {tab.count}
+                    </Text>
+                  </View>
+                )}
+              </Pressable>
+            );
+          })}
+        </ScrollView>
 
-            {/* Tab 2: Doctor Credentials */}
-            <Pressable
-              style={[styles.tabPill, activeTab === 'doctors' && styles.tabPillActive]}
-              onPress={() => setActiveTab('doctors')}
-            >
-              <View style={[styles.tabIconBox, activeTab === 'doctors' && styles.tabIconBoxActive]}>
-                <Ionicons
-                  name={activeTab === 'doctors' ? 'medkit' : 'medkit-outline'}
-                  size={16}
-                  color={activeTab === 'doctors' ? '#FFFFFF' : THEME.colors.primary}
-                />
-              </View>
-              <Text style={[styles.tabLabel, activeTab === 'doctors' && styles.tabLabelActive]}>
-                Doctor Licensing
-              </Text>
-              <View style={[styles.tabBadge, activeTab === 'doctors' && styles.tabBadgeActive]}>
-                <Text style={[styles.tabBadgeText, activeTab === 'doctors' && styles.tabBadgeTextActive]}>
-                  {doctors.length}
-                </Text>
-              </View>
-            </Pressable>
-
-            {/* Tab 3: Complaints */}
-            <Pressable
-              style={[styles.tabPill, activeTab === 'complaints' && styles.tabPillActive]}
-              onPress={() => setActiveTab('complaints')}
-            >
-              <View style={[styles.tabIconBox, activeTab === 'complaints' && styles.tabIconBoxActive]}>
-                <Ionicons
-                  name={activeTab === 'complaints' ? 'alert-circle' : 'alert-circle-outline'}
-                  size={16}
-                  color={activeTab === 'complaints' ? '#FFFFFF' : '#D97706'}
-                />
-              </View>
-              <Text style={[styles.tabLabel, activeTab === 'complaints' && styles.tabLabelActive]}>
-                Complaints
-              </Text>
-              {pendingComplaintsCount > 0 && (
-                <View style={[styles.tabBadgeWarning, activeTab === 'complaints' && styles.tabBadgeActive]}>
-                  <Text style={[styles.tabBadgeTextWarning, activeTab === 'complaints' && styles.tabBadgeTextActive]}>
-                    {pendingComplaintsCount}
-                  </Text>
-                </View>
-              )}
-            </Pressable>
-
-            {/* Tab 4: Audit Log */}
-            <Pressable
-              style={[styles.tabPill, activeTab === 'audit' && styles.tabPillActive]}
-              onPress={() => setActiveTab('audit')}
-            >
-              <View style={[styles.tabIconBox, activeTab === 'audit' && styles.tabIconBoxActive]}>
-                <Ionicons
-                  name={activeTab === 'audit' ? 'shield-checkmark' : 'shield-checkmark-outline'}
-                  size={16}
-                  color={activeTab === 'audit' ? '#FFFFFF' : '#0F766E'}
-                />
-              </View>
-              <Text style={[styles.tabLabel, activeTab === 'audit' && styles.tabLabelActive]}>
-                Audit Trail
-              </Text>
-              <View style={[styles.tabBadge, activeTab === 'audit' && styles.tabBadgeActive]}>
-                <Text style={[styles.tabBadgeText, activeTab === 'audit' && styles.tabBadgeTextActive]}>
-                  {auditLogs.length}
-                </Text>
-              </View>
-            </Pressable>
-          </ScrollView>
-        </View>
-
-        {/* ========================================================================= */}
-        {/* TAB 1: Platform Metrics & Operational Overview */}
-        {/* ========================================================================= */}
         {activeTab === 'metrics' && (
           <View style={styles.tabContent}>
-            {/* Section Title */}
-            <View style={styles.sectionTitleRow}>
-              <View style={styles.sectionTitleIconBox}>
-                <Ionicons name="bar-chart" size={16} color={THEME.colors.primary} />
-              </View>
-              <Text style={styles.sectionTitle}>Operational Performance Indicators</Text>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Operational Performance</Text>
             </View>
 
-            {/* 6 Responsive Metrics Grid */}
             <View style={styles.metricsGrid}>
-              {/* Total Consultations */}
-              <Card style={styles.metricCard}>
-                <View style={styles.metricTopRow}>
-                  <View style={[styles.metricIconCircle, { backgroundColor: '#CCFBF1' }]}>
-                    <Ionicons name="calendar-outline" size={18} color="#0D9488" />
-                  </View>
-                  <Text style={styles.metricTag}>All-Time</Text>
-                </View>
+              <View style={styles.metricCard}>
+                <IconWell name="calendar-outline" />
                 <Text style={styles.metricVal}>{metrics?.totalVisits || 0}</Text>
                 <Text style={styles.metricLbl}>Total Consultations</Text>
-              </Card>
+              </View>
 
-              {/* Completed In-Home Visits */}
-              <Card style={styles.metricCard}>
-                <View style={styles.metricTopRow}>
-                  <View style={[styles.metricIconCircle, { backgroundColor: '#DCFCE7' }]}>
-                    <Ionicons name="checkmark-done-circle-outline" size={18} color="#16A34A" />
-                  </View>
-                  <Text style={[styles.metricTag, { color: '#16A34A', backgroundColor: '#F0FDF4' }]}>Delivered</Text>
-                </View>
-                <Text style={[styles.metricVal, { color: '#16A34A' }]}>{metrics?.completedVisits || 0}</Text>
+              <View style={styles.metricCard}>
+                <IconWell name="checkmark-circle-outline" color={THEME.colors.success} backgroundColor={THEME.colors.successSoft} />
+                <Text style={styles.metricVal}>{metrics?.completedVisits || 0}</Text>
                 <Text style={styles.metricLbl}>Completed Visits</Text>
-              </Card>
+              </View>
 
-              {/* Active Underway */}
-              <Card style={styles.metricCard}>
-                <View style={styles.metricTopRow}>
-                  <View style={[styles.metricIconCircle, { backgroundColor: '#DBEAFE' }]}>
-                    <Ionicons name="navigate-outline" size={18} color="#2563EB" />
-                  </View>
-                  <Text style={[styles.metricTag, { color: '#2563EB', backgroundColor: '#EFF6FF' }]}>In Transit</Text>
-                </View>
-                <Text style={[styles.metricVal, { color: '#2563EB' }]}>{metrics?.activeVisits || 0}</Text>
+              <View style={styles.metricCard}>
+                <IconWell name="navigate-outline" />
+                <Text style={styles.metricVal}>{metrics?.activeVisits || 0}</Text>
                 <Text style={styles.metricLbl}>Active Underway</Text>
-              </Card>
+              </View>
 
-              {/* Gross Billed Volume */}
-              <Card style={styles.metricCard}>
-                <View style={styles.metricTopRow}>
-                  <View style={[styles.metricIconCircle, { backgroundColor: '#F3E8FF' }]}>
-                    <Ionicons name="wallet-outline" size={18} color="#7E22CE" />
-                  </View>
-                  <Text style={[styles.metricTag, { color: '#7E22CE', backgroundColor: '#FAF5FF' }]}>Volume</Text>
-                </View>
-                <Text style={[styles.metricVal, { fontSize: 16, color: '#7E22CE' }]}>
-                  {(metrics?.grossRevenueRwf || 0).toLocaleString()} <Text style={styles.currencyUnit}>RWF</Text>
-                </Text>
-                <Text style={styles.metricLbl}>Gross Billed Fees</Text>
-              </Card>
+              <View style={styles.metricCard}>
+                <IconWell name="wallet-outline" />
+                <Text style={styles.metricVal}>{(metrics?.grossRevenueRwf || 0).toLocaleString()}</Text>
+                <Text style={styles.metricLbl}>Gross Fees (RWF)</Text>
+              </View>
 
-              {/* Average Doctor Rating */}
-              <Card style={styles.metricCard}>
-                <View style={styles.metricTopRow}>
-                  <View style={[styles.metricIconCircle, { backgroundColor: '#FEF3C7' }]}>
-                    <Ionicons name="star" size={18} color="#D97706" />
-                  </View>
-                  <Text style={[styles.metricTag, { color: '#D97706', backgroundColor: '#FFFBEB' }]}>Reviews</Text>
-                </View>
+              <View style={styles.metricCard}>
+                <IconWell name="star" color={THEME.colors.warning} backgroundColor={THEME.colors.warningSoft} />
                 <View style={styles.ratingRow}>
-                  <Ionicons name="star" size={16} color="#F59E0B" />
-                  <Text style={[styles.metricVal, { color: '#1E293B' }]}>{metrics?.avgRating || 0}</Text>
+                  <Text style={styles.metricVal}>{metrics?.avgRating || 0}</Text>
                   <Text style={styles.maxRatingText}>/ 5.0</Text>
                 </View>
                 <Text style={styles.metricLbl}>Avg. Doctor Rating</Text>
-              </Card>
+              </View>
 
-              {/* Pending Doctor Reviews */}
-              <Card style={StyleSheet.flatten([styles.metricCard, styles.metricCardAlert])}>
-                <View style={styles.metricTopRow}>
-                  <View style={[styles.metricIconCircle, { backgroundColor: '#FEE2E2' }]}>
-                    <Ionicons name="hourglass-outline" size={18} color="#DC2626" />
-                  </View>
-                  <Text style={[styles.metricTag, { color: '#DC2626', backgroundColor: '#FEF2F2' }]}>Action Req.</Text>
-                </View>
-                <Text style={[styles.metricVal, { color: '#DC2626' }]}>
+              <View style={[styles.metricCard, pendingDoctorsCount > 0 && styles.metricCardAlert]}>
+                <IconWell
+                  name="hourglass-outline"
+                  color={THEME.colors.error}
+                  backgroundColor={THEME.colors.errorSoft}
+                />
+                <Text style={[styles.metricVal, pendingDoctorsCount > 0 && { color: THEME.colors.error }]}>
                   {metrics?.pendingVerifications || 0}
                 </Text>
-                <Text style={styles.metricLbl}>Pending MD Reviews</Text>
-              </Card>
+                <Text style={styles.metricLbl}>Pending Reviews</Text>
+              </View>
             </View>
 
-            {/* Platform Configuration Card */}
             <Card style={styles.configCard}>
               <View style={styles.configHeader}>
-                <View style={styles.configHeaderIcon}>
-                  <Ionicons name="settings-outline" size={18} color={THEME.colors.primary} />
-                </View>
-                <View>
-                  <Text style={styles.configTitle}>Platform Configuration Rules</Text>
-                  <Text style={styles.configSub}>Standard operational parameters for Kigali healthcare dispatch</Text>
+                <IconWell name="settings-outline" size={40} iconSize={20} />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.configTitle}>Platform Configuration</Text>
+                  <Text style={styles.configSub}>Standard parameters for Kigali dispatch</Text>
                 </View>
               </View>
 
               <View style={styles.configDivider} />
 
               <View style={styles.configItemRow}>
-                <Ionicons name="location-outline" size={16} color={THEME.colors.primary} />
-                <Text style={styles.configLabel}>Coverage Districts:</Text>
-                <Text style={styles.configValue}>{mockDomainStore.platformConfig.coverageDistricts.join(', ')} (Kigali)</Text>
-              </View>
-
-              <View style={styles.configItemRow}>
-                <Ionicons name="car-outline" size={16} color={THEME.colors.primary} />
-                <Text style={styles.configLabel}>Base Travel Fee:</Text>
-                <Text style={styles.configValue}>{mockDomainStore.platformConfig.baseTravelFeeRwf.toLocaleString()} RWF</Text>
-              </View>
-
-              <View style={styles.configItemRow}>
-                <Ionicons name="call-outline" size={16} color="#DC2626" />
-                <Text style={styles.configLabel}>Emergency Dispatch:</Text>
-                <Text style={[styles.configValue, { color: '#DC2626', fontWeight: '700' }]}>
-                  {mockDomainStore.platformConfig.emergencyPhone} (Rwanda SAMU)
+                <IconWell name="location-sharp" size={28} iconSize={14} />
+                <Text style={styles.configLabel}>Coverage</Text>
+                <Text style={styles.configValue}>
+                  {mockDomainStore.platformConfig.coverageDistricts.join(', ')}
                 </Text>
               </View>
 
               <View style={styles.configItemRow}>
-                <Ionicons name="shield-checkmark-outline" size={16} color="#0D9488" />
-                <Text style={styles.configLabel}>Regulatory Authority:</Text>
-                <Text style={styles.configValue}>RMDC & Rwandan Law No. 058/2021</Text>
+                <IconWell name="car-outline" size={28} iconSize={14} />
+                <Text style={styles.configLabel}>Travel Fee</Text>
+                <Text style={styles.configValue}>
+                  {mockDomainStore.platformConfig.baseTravelFeeRwf.toLocaleString()} RWF
+                </Text>
+              </View>
+
+              <View style={styles.configItemRow}>
+                <IconWell
+                  name="call-outline"
+                  size={28}
+                  iconSize={14}
+                  color={THEME.colors.error}
+                  backgroundColor={THEME.colors.errorSoft}
+                />
+                <Text style={styles.configLabel}>Emergency</Text>
+                <Text style={[styles.configValue, { color: THEME.colors.error }]}>
+                  {mockDomainStore.platformConfig.emergencyPhone} SAMU
+                </Text>
+              </View>
+
+              <View style={styles.configItemRow}>
+                <IconWell name="shield-checkmark-outline" size={28} iconSize={14} />
+                <Text style={styles.configLabel}>Authority</Text>
+                <Text style={styles.configValue}>RMDC · Law No. 058/2021</Text>
               </View>
             </Card>
           </View>
         )}
 
-        {/* ========================================================================= */}
-        {/* TAB 2: Doctor Credential Review (FR-10.1) */}
-        {/* ========================================================================= */}
         {activeTab === 'doctors' && (
           <View style={styles.tabContent}>
-            {/* Status Filter Chips */}
             <View style={styles.filterSection}>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScrollContent}>
                 <Pressable
                   style={[styles.filterChip, doctorFilter === 'all' && styles.filterChipActive]}
                   onPress={() => setDoctorFilter('all')}
                 >
-                  <Ionicons name="people-outline" size={14} color={doctorFilter === 'all' ? '#FFF' : '#64748B'} />
+                  <Ionicons name="people-outline" size={14} color={doctorFilter === 'all' ? THEME.colors.primary : THEME.colors.textMuted} />
                   <Text style={[styles.filterChipText, doctorFilter === 'all' && styles.filterChipTextActive]}>
                     All ({doctors.length})
                   </Text>
@@ -456,7 +457,7 @@ export default function AdminConsoleScreen() {
                   style={[styles.filterChip, doctorFilter === 'pending' && styles.filterChipActiveWarning]}
                   onPress={() => setDoctorFilter('pending')}
                 >
-                  <Ionicons name="hourglass-outline" size={14} color={doctorFilter === 'pending' ? '#B45309' : '#D97706'} />
+                  <Ionicons name="time-outline" size={14} color={THEME.colors.warning} />
                   <Text style={[styles.filterChipText, doctorFilter === 'pending' && styles.filterChipTextActiveWarning]}>
                     Pending ({pendingDoctorsCount})
                   </Text>
@@ -466,7 +467,7 @@ export default function AdminConsoleScreen() {
                   style={[styles.filterChip, doctorFilter === 'approved' && styles.filterChipActiveSuccess]}
                   onPress={() => setDoctorFilter('approved')}
                 >
-                  <Ionicons name="checkmark-circle-outline" size={14} color={doctorFilter === 'approved' ? '#15803D' : '#16A34A'} />
+                  <Ionicons name="checkmark-circle-outline" size={14} color={THEME.colors.success} />
                   <Text style={[styles.filterChipText, doctorFilter === 'approved' && styles.filterChipTextActiveSuccess]}>
                     Approved ({approvedDoctorsCount})
                   </Text>
@@ -476,7 +477,7 @@ export default function AdminConsoleScreen() {
                   style={[styles.filterChip, doctorFilter === 'suspended' && styles.filterChipActiveDanger]}
                   onPress={() => setDoctorFilter('suspended')}
                 >
-                  <Ionicons name="ban-outline" size={14} color={doctorFilter === 'suspended' ? '#B91C1C' : '#DC2626'} />
+                  <Ionicons name="ban-outline" size={14} color={THEME.colors.error} />
                   <Text style={[styles.filterChipText, doctorFilter === 'suspended' && styles.filterChipTextActiveDanger]}>
                     Suspended ({suspendedDoctorsCount})
                   </Text>
@@ -484,103 +485,98 @@ export default function AdminConsoleScreen() {
               </ScrollView>
             </View>
 
-            {/* Doctor List */}
             {filteredDoctors.length === 0 ? (
               <Card style={styles.emptyCard}>
-                <Ionicons name="search-outline" size={32} color={THEME.colors.textMuted} />
+                <IconWell name="search-outline" size={48} iconSize={24} color={THEME.colors.textMuted} backgroundColor={THEME.colors.surfaceSubtle} />
                 <Text style={styles.emptyTitle}>No doctors match this filter</Text>
                 <Text style={styles.emptyText}>Switch filters or reset demo data to view registered clinicians.</Text>
               </Card>
             ) : (
               filteredDoctors.map((d) => (
                 <Card key={d.userId} style={styles.docCard}>
-                  {/* Doctor Card Top Row */}
                   <View style={styles.docHeader}>
-                    <View style={styles.docAvatarCol}>
-                      <View style={styles.docAvatarBox}>
-                        <Ionicons name="medical" size={20} color={THEME.colors.primary} />
-                      </View>
-                    </View>
+                    {d.avatarUrl ? (
+                      <Image source={{ uri: d.avatarUrl }} style={styles.docAvatar} />
+                    ) : (
+                      <IconWell name="medkit-outline" size={44} iconSize={20} />
+                    )}
 
                     <View style={styles.docMainInfo}>
                       <View style={styles.docNameBadgeRow}>
-                        <Text style={styles.docName}>{d.name}</Text>
+                        <View style={styles.docNameRow}>
+                          <Text style={styles.docName} numberOfLines={1}>{d.name}</Text>
+                          {d.verificationStatus === 'approved' && (
+                            <Ionicons name="checkmark-circle" size={16} color={THEME.colors.primary} />
+                          )}
+                        </View>
                         <Badge status={d.verificationStatus} size="sm" />
                       </View>
-
+                      <Text style={styles.docSpecialty}>{d.specialty}</Text>
                       <View style={styles.docMetaItem}>
-                        <Ionicons name="ribbon-outline" size={14} color={THEME.colors.primary} />
-                        <Text style={styles.docSpecialty}>
-                          {d.specialty} • <Text style={styles.licenseNumberText}>{d.licenseNumber}</Text>
-                        </Text>
+                        <Ionicons name="ribbon-outline" size={13} color={THEME.colors.primary} />
+                        <Text style={styles.licenseNumberText}>{d.licenseNumber}</Text>
                       </View>
                     </View>
                   </View>
 
                   <View style={styles.docDivider} />
 
-                  {/* Doctor Details Grid */}
                   <View style={styles.docDetailsGrid}>
                     <View style={styles.docDetailRow}>
-                      <Ionicons name="mail-outline" size={14} color="#64748B" />
+                      <Ionicons name="mail-outline" size={14} color={THEME.colors.textMuted} />
                       <Text style={styles.docDetailText}>{d.email}</Text>
                     </View>
-
                     <View style={styles.docDetailRow}>
-                      <Ionicons name="call-outline" size={14} color="#64748B" />
+                      <Ionicons name="call-outline" size={14} color={THEME.colors.textMuted} />
                       <Text style={styles.docDetailText}>{d.phone}</Text>
                     </View>
-
                     <View style={styles.docDetailRow}>
-                      <Ionicons name="school-outline" size={14} color="#64748B" />
+                      <Ionicons name="school-outline" size={14} color={THEME.colors.textMuted} />
                       <Text style={styles.docDetailText}>
-                        {d.qualifications.join(', ')} ({d.experienceYears} yrs experience)
+                        {d.qualifications.join(', ')} ({d.experienceYears} yrs)
                       </Text>
                     </View>
-
-                    <View style={styles.docDetailRow}>
-                      <Ionicons name="map-outline" size={14} color="#64748B" />
-                      <Text style={styles.docDetailText}>
-                        Coverage: {d.coverageDistricts.join(', ')}
-                      </Text>
+                    <View style={styles.districtChipsRow}>
+                      {d.coverageDistricts.map((district) => (
+                        <View key={district} style={styles.districtChip}>
+                          <Ionicons name="location-sharp" size={12} color={THEME.colors.primary} />
+                          <Text style={styles.districtText}>{district}</Text>
+                        </View>
+                      ))}
                     </View>
-
                     <View style={styles.docDetailRow}>
-                      <Ionicons name="pricetag-outline" size={14} color="#64748B" />
+                      <Ionicons name="pricetag-outline" size={14} color={THEME.colors.textMuted} />
                       <Text style={styles.docDetailText}>
-                        Fee: {(d.consultationFeeRwf || 25000).toLocaleString()} RWF (+ {d.travelFeeRwf || 5000} RWF travel)
+                        {(d.consultationFeeRwf || 25000).toLocaleString()} RWF + {d.travelFeeRwf || 5000} RWF travel
                       </Text>
                     </View>
                   </View>
 
-                  {/* Administrative Verification Action Buttons */}
                   <View style={styles.docActions}>
                     {d.verificationStatus !== 'approved' && (
                       <Pressable
                         style={[styles.docActionBtn, styles.approveBtn]}
                         onPress={() => handleUpdateDoctorStatus(d.userId, 'approved')}
                       >
-                        <Ionicons name="checkmark-circle-outline" size={15} color="#FFFFFF" />
-                        <Text style={styles.docActionBtnTextWhite}>Approve License</Text>
+                        <Ionicons name="checkmark-circle" size={16} color="#FFFFFF" />
+                        <Text style={styles.docActionBtnTextWhite}>Approve</Text>
                       </Pressable>
                     )}
-
                     {d.verificationStatus !== 'suspended' && (
                       <Pressable
                         style={[styles.docActionBtn, styles.suspendBtn]}
                         onPress={() => handleUpdateDoctorStatus(d.userId, 'suspended')}
                       >
-                        <Ionicons name="ban-outline" size={15} color="#FFFFFF" />
-                        <Text style={styles.docActionBtnTextWhite}>Suspend Doctor</Text>
+                        <Ionicons name="ban-outline" size={16} color="#FFFFFF" />
+                        <Text style={styles.docActionBtnTextWhite}>Suspend</Text>
                       </Pressable>
                     )}
-
                     {d.verificationStatus !== 'pending' && (
                       <Pressable
                         style={[styles.docActionBtn, styles.pendingBtn]}
                         onPress={() => handleUpdateDoctorStatus(d.userId, 'pending')}
                       >
-                        <Ionicons name="time-outline" size={15} color="#0F766E" />
+                        <Ionicons name="time-outline" size={16} color={THEME.colors.primary} />
                         <Text style={styles.docActionBtnTextTeal}>Mark Pending</Text>
                       </Pressable>
                     )}
@@ -591,39 +587,33 @@ export default function AdminConsoleScreen() {
           </View>
         )}
 
-        {/* ========================================================================= */}
-        {/* TAB 3: Complaints Management & Grievances (FR-10.4) */}
-        {/* ========================================================================= */}
         {activeTab === 'complaints' && (
           <View style={styles.tabContent}>
-            {/* Complaint Filter Chips */}
             <View style={styles.filterSection}>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScrollContent}>
                 <Pressable
                   style={[styles.filterChip, complaintFilter === 'all' && styles.filterChipActive]}
                   onPress={() => setComplaintFilter('all')}
                 >
-                  <Ionicons name="layers-outline" size={14} color={complaintFilter === 'all' ? '#FFF' : '#64748B'} />
+                  <Ionicons name="layers-outline" size={14} color={complaintFilter === 'all' ? THEME.colors.primary : THEME.colors.textMuted} />
                   <Text style={[styles.filterChipText, complaintFilter === 'all' && styles.filterChipTextActive]}>
                     All ({complaints.length})
                   </Text>
                 </Pressable>
-
                 <Pressable
                   style={[styles.filterChip, complaintFilter === 'open' && styles.filterChipActiveWarning]}
                   onPress={() => setComplaintFilter('open')}
                 >
-                  <Ionicons name="alert-circle-outline" size={14} color={complaintFilter === 'open' ? '#B45309' : '#D97706'} />
+                  <Ionicons name="alert-circle-outline" size={14} color={THEME.colors.warning} />
                   <Text style={[styles.filterChipText, complaintFilter === 'open' && styles.filterChipTextActiveWarning]}>
-                    Pending Review ({pendingComplaintsCount})
+                    Open ({pendingComplaintsCount})
                   </Text>
                 </Pressable>
-
                 <Pressable
                   style={[styles.filterChip, complaintFilter === 'resolved' && styles.filterChipActiveSuccess]}
                   onPress={() => setComplaintFilter('resolved')}
                 >
-                  <Ionicons name="checkmark-done-outline" size={14} color={complaintFilter === 'resolved' ? '#15803D' : '#16A34A'} />
+                  <Ionicons name="checkmark-done-outline" size={14} color={THEME.colors.success} />
                   <Text style={[styles.filterChipText, complaintFilter === 'resolved' && styles.filterChipTextActiveSuccess]}>
                     Resolved ({complaints.length - pendingComplaintsCount})
                   </Text>
@@ -633,8 +623,8 @@ export default function AdminConsoleScreen() {
 
             {filteredComplaints.length === 0 ? (
               <Card style={styles.emptyCard}>
-                <Ionicons name="checkmark-circle-outline" size={36} color="#16A34A" />
-                <Text style={styles.emptyTitle}>No Complaints Reported</Text>
+                <IconWell name="checkmark-circle-outline" size={48} iconSize={26} color={THEME.colors.success} backgroundColor={THEME.colors.successSoft} />
+                <Text style={styles.emptyTitle}>No complaints reported</Text>
                 <Text style={styles.emptyText}>All patient consultations are currently free of grievances.</Text>
               </Card>
             ) : (
@@ -642,9 +632,13 @@ export default function AdminConsoleScreen() {
                 <Card key={c.id} style={styles.complaintCard}>
                   <View style={styles.complaintHeader}>
                     <View style={styles.complaintTitleCol}>
-                      <View style={styles.complaintIconBox}>
-                        <Ionicons name="alert-circle" size={18} color="#D97706" />
-                      </View>
+                      <IconWell
+                        name="chatbox-ellipses-outline"
+                        size={32}
+                        iconSize={16}
+                        color={THEME.colors.warning}
+                        backgroundColor={THEME.colors.warningSoft}
+                      />
                       <Text style={styles.complaintSubject}>{c.subject}</Text>
                     </View>
                     <Badge status={c.status === 'resolved' ? 'completed' : 'pending'} size="sm" />
@@ -656,32 +650,27 @@ export default function AdminConsoleScreen() {
 
                   <View style={styles.complaintMetaGrid}>
                     <View style={styles.complaintMetaItem}>
-                      <Ionicons name="receipt-outline" size={13} color="#64748B" />
+                      <Ionicons name="receipt-outline" size={13} color={THEME.colors.textMuted} />
                       <Text style={styles.complaintMetaText}>Visit #{c.visitId}</Text>
                     </View>
-
                     <View style={styles.complaintMetaItem}>
-                      <Ionicons name="calendar-outline" size={13} color="#64748B" />
+                      <Ionicons name="calendar-outline" size={13} color={THEME.colors.textMuted} />
                       <Text style={styles.complaintMetaText}>{c.createdAt.split('T')[0]}</Text>
                     </View>
-
                     <View style={styles.complaintMetaItem}>
-                      <Ionicons name="person-outline" size={13} color="#64748B" />
-                      <Text style={styles.complaintMetaText}>Reporter: {c.reporterRole.toUpperCase()}</Text>
+                      <Ionicons name="person-outline" size={13} color={THEME.colors.textMuted} />
+                      <Text style={styles.complaintMetaText}>{c.reporterRole}</Text>
                     </View>
                   </View>
 
                   {c.resolutionNotes ? (
                     <View style={styles.resolutionBox}>
-                      <Ionicons name="checkmark-circle" size={15} color="#16A34A" />
-                      <Text style={styles.resolutionNotes}>Resolution: {c.resolutionNotes}</Text>
+                      <Ionicons name="checkmark-circle" size={15} color={THEME.colors.success} />
+                      <Text style={styles.resolutionNotes}>{c.resolutionNotes}</Text>
                     </View>
                   ) : (
-                    <Pressable
-                      style={styles.resolveComplaintBtn}
-                      onPress={() => handleResolveComplaint(c.id)}
-                    >
-                      <Ionicons name="checkmark-done-outline" size={15} color="#FFFFFF" />
+                    <Pressable style={styles.resolveComplaintBtn} onPress={() => handleResolveComplaint(c.id)}>
+                      <Ionicons name="checkmark-done-outline" size={16} color="#FFFFFF" />
                       <Text style={styles.resolveComplaintBtnText}>Resolve Complaint</Text>
                     </Pressable>
                   )}
@@ -691,43 +680,36 @@ export default function AdminConsoleScreen() {
           </View>
         )}
 
-        {/* ========================================================================= */}
-        {/* TAB 4: Immutable Medical Record Audit Trail (FR-10.5) */}
-        {/* ========================================================================= */}
         {activeTab === 'audit' && (
           <View style={styles.tabContent}>
-            {/* Regulatory Disclaimer Banner */}
             <Card style={styles.auditDisclaimer}>
               <View style={styles.disclaimerRow}>
-                <View style={styles.auditShieldBox}>
-                  <Ionicons name="lock-closed" size={18} color="#0F766E" />
-                </View>
+                <IconWell name="lock-closed-outline" size={36} iconSize={18} />
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.auditDisclaimerTitle}>Rwandan Law No. 058/2021 Compliance</Text>
+                  <Text style={styles.auditDisclaimerTitle}>Law No. 058/2021 Compliance</Text>
                   <Text style={styles.auditDisclaimerText}>
-                    Mandatory cryptographic audit logs. Tracks clinical notes creation, electronic prescription publication, specimen lab orders, and patient record access.
+                    Mandatory audit logs for clinical notes, prescriptions, lab orders, and record access.
                   </Text>
                 </View>
               </View>
             </Card>
 
-            {/* Audit Log Cards */}
             {auditLogs.map((log) => {
               const isCreate = log.action === 'CREATE' || log.action === 'PUBLISH';
               return (
                 <Card key={log.id} style={styles.auditCard}>
                   <View style={styles.auditTopRow}>
                     <View style={styles.auditActionBadge}>
-                      <Ionicons
+                      <IconWell
                         name={isCreate ? 'add-circle-outline' : 'eye-outline'}
-                        size={14}
-                        color={THEME.colors.primary}
+                        size={28}
+                        iconSize={14}
                       />
-                      <Text style={styles.auditActionText}>[{log.action}]</Text>
+                      <Text style={styles.auditActionText}>{log.action}</Text>
                       <Text style={styles.auditEntityText}>{log.entityType}</Text>
                     </View>
                     <View style={styles.auditTimeRow}>
-                      <Ionicons name="time-outline" size={12} color="#94A3B8" />
+                      <Ionicons name="time-outline" size={12} color={THEME.colors.textMuted} />
                       <Text style={styles.auditTime}>{log.timestamp.replace('T', ' ').slice(0, 19)}</Text>
                     </View>
                   </View>
@@ -736,15 +718,14 @@ export default function AdminConsoleScreen() {
 
                   <View style={styles.auditFooterRow}>
                     <View style={styles.auditActorBadge}>
-                      <Ionicons name="person-circle-outline" size={14} color="#475569" />
+                      <Ionicons name="person-circle-outline" size={16} color={THEME.colors.textSecondary} />
                       <Text style={styles.auditActorText}>
-                        {log.actorName} ({log.actorRole.toUpperCase()})
+                        {log.actorName} ({log.actorRole})
                       </Text>
                     </View>
-
                     <View style={styles.hashBadge}>
-                      <Ionicons name="finger-print-outline" size={13} color="#0D9488" />
-                      <Text style={styles.hashText}>Hash Verified</Text>
+                      <Ionicons name="finger-print-outline" size={13} color={THEME.colors.primary} />
+                      <Text style={styles.hashText}>Verified</Text>
                     </View>
                   </View>
                 </Card>
@@ -753,20 +734,28 @@ export default function AdminConsoleScreen() {
           </View>
         )}
 
-        {/* Demo Baseline Reset in Admin Footer */}
-        <View style={styles.adminFooter}>
-          <Pressable
-            style={styles.fullResetBtn}
-            onPress={() => {
-              resetDemoData();
-              onRefresh();
-              Alert.alert('Environment Restored', 'All platform fixtures, mock doctors, visits, and clinical records have been reset to baseline.');
-            }}
-          >
-            <Ionicons name="refresh-circle-outline" size={18} color="#0F766E" />
-            <Text style={styles.fullResetBtnText}>Reset Demo Environment to Baseline State</Text>
-          </Pressable>
+        <View style={styles.emergencyFooter}>
+          <Ionicons name="information-circle-outline" size={14} color={THEME.colors.textMuted} />
+          <Text style={styles.emergencyFooterText}>
+            Medical Emergency in Rwanda? Call SAMU Helpline{' '}
+            <Text style={styles.emergencyNumber}>112</Text>
+          </Text>
         </View>
+
+        <Pressable
+          style={styles.fullResetBtn}
+          onPress={() => {
+            resetDemoData();
+            onRefresh();
+            Alert.alert(
+              'Environment Restored',
+              'All platform fixtures, mock doctors, visits, and clinical records have been reset to baseline.'
+            );
+          }}
+        >
+          <Ionicons name="refresh-outline" size={16} color={THEME.colors.primary} />
+          <Text style={styles.fullResetBtnText}>Reset demo to baseline</Text>
+        </Pressable>
       </ScrollView>
     </SafeAreaView>
   );
@@ -775,349 +764,255 @@ export default function AdminConsoleScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: THEME.colors.background,
   },
   scrollContent: {
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 60,
+    paddingBottom: THEME.spacing.xxl,
   },
-  topHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  headerLeftCol: {
-    flex: 1,
-  },
-  logoImage: {
-    width: 150,
-    height: 42,
-    marginBottom: 4,
-  },
-  adminRoleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginTop: 2,
-  },
-  adminCrownBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#FEF3C7',
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#FDE68A',
-  },
-  adminCrownText: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: '#92400E',
-  },
-  kigaliRegionText: {
-    fontSize: 11,
-    color: THEME.colors.textMuted,
-    fontWeight: '500',
-  },
-  headerActionsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  headerActionBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: THEME.borderRadius.sm,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  headerActionBtnText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#475569',
-  },
-  signOutBtn: {
-    borderColor: '#FECACA',
-    backgroundColor: '#FEF2F2',
-  },
-  signOutBtnText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#DC2626',
-  },
-
-  // 4-Pill Summary Bar
-  summaryBar: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 14,
-  },
-  summaryPill: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-    borderRadius: THEME.borderRadius.md,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    paddingVertical: 8,
-    paddingHorizontal: 6,
+  iconWell: {
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 2,
   },
-  summaryPillActive: {
-    backgroundColor: '#0F172A',
-    borderColor: '#0F172A',
+  brandRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: THEME.spacing.base,
+    paddingTop: THEME.spacing.sm,
+    paddingBottom: 4,
   },
-  summaryPillNumber: {
-    fontSize: 14,
+  logoImage: {
+    width: 145,
+    height: 42,
+  },
+  brandActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  iconBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: THEME.colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: THEME.colors.border,
+  },
+  header: {
+    paddingHorizontal: THEME.spacing.base,
+    paddingTop: 2,
+    paddingBottom: THEME.spacing.sm,
+  },
+  greeting: {
+    fontSize: 20,
     fontWeight: '800',
     color: THEME.colors.textPrimary,
   },
-  summaryPillLabel: {
-    fontSize: 10,
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  locationText: {
+    fontSize: 13,
     color: THEME.colors.textSecondary,
     fontWeight: '500',
   },
-  summaryPillTextActive: {
-    color: '#FFFFFF',
+  summaryBar: {
+    flexDirection: 'row',
+    paddingHorizontal: THEME.spacing.base,
+    gap: 8,
+    marginBottom: THEME.spacing.md,
   },
-
-  // Responsive Horizontal Tabs
+  summaryChip: {
+    flex: 1,
+    backgroundColor: THEME.colors.surface,
+    borderWidth: 1,
+    borderColor: THEME.colors.border,
+    borderRadius: THEME.borderRadius.md,
+    paddingVertical: 10,
+    paddingHorizontal: 4,
+    alignItems: 'center',
+    gap: 4,
+  },
+  summaryChipActive: {
+    backgroundColor: THEME.colors.primary,
+    borderColor: THEME.colors.primary,
+  },
+  summaryNumber: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: THEME.colors.textPrimary,
+  },
+  summaryLabel: {
+    fontSize: 10,
+    color: THEME.colors.textMuted,
+    fontWeight: '600',
+  },
+  summaryTextActive: {
+    color: THEME.colors.textWhite,
+  },
   tabContainer: {
-    marginBottom: 16,
-    marginHorizontal: -16,
-    paddingHorizontal: 16,
+    marginBottom: THEME.spacing.md,
   },
   tabScrollContent: {
+    paddingHorizontal: THEME.spacing.base,
     gap: 8,
-    paddingVertical: 2,
   },
   tabPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 7,
+    gap: 6,
     paddingHorizontal: 14,
-    paddingVertical: 9,
-    borderRadius: 24,
-    backgroundColor: '#FFFFFF',
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: THEME.colors.surface,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: THEME.colors.border,
   },
   tabPillActive: {
-    backgroundColor: '#0F172A',
-    borderColor: '#0F172A',
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  tabIconBox: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: '#F1F5F9',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  tabIconBoxActive: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: THEME.colors.primarySoft,
+    borderColor: THEME.colors.primaryLight,
   },
   tabLabel: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#475569',
+    color: THEME.colors.textMuted,
   },
   tabLabelActive: {
-    color: '#FFFFFF',
+    color: THEME.colors.primary,
     fontWeight: '700',
   },
   tabBadge: {
-    backgroundColor: '#F1F5F9',
-    paddingHorizontal: 7,
-    paddingVertical: 2,
+    backgroundColor: THEME.colors.surfaceSubtle,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
     borderRadius: 10,
   },
   tabBadgeActive: {
-    backgroundColor: '#38BDF8',
+    backgroundColor: THEME.colors.surface,
+  },
+  tabBadgeWarn: {
+    backgroundColor: THEME.colors.warningSoft,
   },
   tabBadgeText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#475569',
+    color: THEME.colors.textSecondary,
   },
   tabBadgeTextActive: {
-    color: '#0F172A',
+    color: THEME.colors.primary,
   },
-  tabBadgeWarning: {
-    backgroundColor: '#FEF3C7',
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-    borderRadius: 10,
+  tabBadgeTextWarn: {
+    color: THEME.colors.warning,
   },
-  tabBadgeTextWarning: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#B45309',
-  },
-
   tabContent: {
-    marginBottom: 16,
+    paddingHorizontal: THEME.spacing.base,
+    marginBottom: THEME.spacing.md,
   },
-
-  // Tab 1: Metrics
-  sectionTitleRow: {
+  sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 12,
-  },
-  sectionTitleIconBox: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
-    backgroundColor: '#CCFBF1',
-    alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
+    marginBottom: THEME.spacing.md,
   },
   sectionTitle: {
-    fontSize: 15,
-    fontWeight: '800',
+    fontSize: 16,
+    fontWeight: '700',
     color: THEME.colors.textPrimary,
   },
   metricsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 10,
-    marginBottom: 16,
+    marginBottom: THEME.spacing.base,
   },
   metricCard: {
     width: '48%',
-    padding: 12,
+    backgroundColor: THEME.colors.surface,
+    borderWidth: 1,
+    borderColor: THEME.colors.border,
     borderRadius: THEME.borderRadius.md,
+    padding: 12,
+    alignItems: 'flex-start',
+    ...THEME.shadows.card,
   },
   metricCardAlert: {
     borderColor: '#FECACA',
     backgroundColor: '#FFF8F8',
   },
-  metricTopRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  metricIconCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  metricTag: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#64748B',
-    backgroundColor: '#F1F5F9',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
   metricVal: {
     fontSize: 20,
     fontWeight: '800',
     color: THEME.colors.textPrimary,
-  },
-  currencyUnit: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#7E22CE',
+    marginTop: 10,
   },
   metricLbl: {
     fontSize: 11,
     color: THEME.colors.textSecondary,
-    marginTop: 4,
+    marginTop: 2,
+    fontWeight: '500',
   },
   ratingRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'baseline',
     gap: 4,
+    marginTop: 10,
   },
   maxRatingText: {
     fontSize: 12,
-    color: '#94A3B8',
+    color: THEME.colors.textMuted,
     fontWeight: '600',
   },
-
-  // Config Card
   configCard: {
     padding: 14,
-    borderRadius: THEME.borderRadius.md,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
   },
   configHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
   },
-  configHeaderIcon: {
-    width: 34,
-    height: 34,
-    borderRadius: 8,
-    backgroundColor: '#CCFBF1',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   configTitle: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '700',
     color: THEME.colors.textPrimary,
   },
   configSub: {
-    fontSize: 11,
+    fontSize: 12,
     color: THEME.colors.textSecondary,
     marginTop: 1,
   },
   configDivider: {
     height: 1,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: THEME.colors.borderLight,
     marginVertical: 12,
   },
   configItemRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 8,
+    gap: 10,
+    marginBottom: 10,
   },
   configLabel: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#475569',
-    width: 130,
+    color: THEME.colors.textSecondary,
+    width: 78,
   },
   configValue: {
     flex: 1,
     fontSize: 12,
-    color: '#1E293B',
+    color: THEME.colors.textPrimary,
     fontWeight: '600',
   },
-
-  // Filter Chips
   filterSection: {
     marginBottom: 12,
-    marginHorizontal: -16,
-    paddingHorizontal: 16,
+    marginHorizontal: -THEME.spacing.base,
   },
   filterScrollContent: {
+    paddingHorizontal: THEME.spacing.base,
     gap: 8,
   },
   filterChip: {
@@ -1127,69 +1022,61 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: 20,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: THEME.colors.surface,
     borderWidth: 1,
-    borderColor: '#CBD5E1',
+    borderColor: THEME.colors.border,
   },
   filterChipActive: {
-    backgroundColor: '#1E293B',
-    borderColor: '#1E293B',
+    backgroundColor: THEME.colors.primarySoft,
+    borderColor: THEME.colors.primaryLight,
   },
   filterChipActiveWarning: {
-    backgroundColor: '#FEF3C7',
+    backgroundColor: THEME.colors.warningSoft,
     borderColor: '#FDE68A',
   },
   filterChipActiveSuccess: {
-    backgroundColor: '#DCFCE7',
+    backgroundColor: THEME.colors.successSoft,
     borderColor: '#BBF7D0',
   },
   filterChipActiveDanger: {
-    backgroundColor: '#FEE2E2',
+    backgroundColor: THEME.colors.errorSoft,
     borderColor: '#FECACA',
   },
   filterChipText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#64748B',
+    color: THEME.colors.textSecondary,
   },
   filterChipTextActive: {
-    color: '#FFFFFF',
+    color: THEME.colors.primary,
     fontWeight: '700',
   },
   filterChipTextActiveWarning: {
-    color: '#92400E',
+    color: THEME.colors.badgePendingText,
     fontWeight: '700',
   },
   filterChipTextActiveSuccess: {
-    color: '#166534',
+    color: THEME.colors.badgeCompletedText,
     fontWeight: '700',
   },
   filterChipTextActiveDanger: {
-    color: '#991B1B',
+    color: THEME.colors.badgeCancelledText,
     fontWeight: '700',
   },
-
-  // Doctor Cards
   docCard: {
     marginBottom: 12,
     padding: 14,
-    borderRadius: THEME.borderRadius.md,
   },
   docHeader: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 10,
+    gap: 12,
   },
-  docAvatarCol: {
-    paddingTop: 2,
-  },
-  docAvatarBox: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: '#CCFBF1',
-    alignItems: 'center',
-    justifyContent: 'center',
+  docAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: THEME.colors.primarySoft,
   },
   docMainInfo: {
     flex: 1,
@@ -1198,45 +1085,75 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 4,
+    gap: 8,
+    marginBottom: 2,
+  },
+  docNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    flex: 1,
+    paddingRight: 6,
   },
   docName: {
     fontSize: 15,
     fontWeight: '800',
     color: THEME.colors.textPrimary,
+    flexShrink: 1,
   },
   docMetaItem: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
+    marginTop: 4,
   },
   docSpecialty: {
-    fontSize: 12,
+    fontSize: 13,
     color: THEME.colors.primary,
     fontWeight: '600',
   },
   licenseNumberText: {
-    color: '#64748B',
+    fontSize: 12,
+    color: THEME.colors.textSecondary,
     fontWeight: '500',
   },
   docDivider: {
     height: 1,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: THEME.colors.borderLight,
     marginVertical: 10,
   },
   docDetailsGrid: {
-    gap: 6,
+    gap: 8,
     marginBottom: 12,
   },
   docDetailRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
   },
   docDetailText: {
     fontSize: 12,
-    color: '#475569',
+    color: THEME.colors.textSecondary,
     flex: 1,
+  },
+  districtChipsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  districtChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: THEME.colors.primarySoft,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: THEME.borderRadius.full,
+  },
+  districtText: {
+    fontSize: 11,
+    color: THEME.colors.primary,
+    fontWeight: '600',
   },
   docActions: {
     flexDirection: 'row',
@@ -1244,26 +1161,26 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingTop: 10,
     borderTopWidth: 1,
-    borderColor: '#F1F5F9',
+    borderColor: THEME.colors.borderLight,
   },
   docActionBtn: {
     flex: 1,
-    minWidth: 130,
+    minWidth: 110,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 5,
-    paddingVertical: 8,
+    paddingVertical: 9,
     borderRadius: THEME.borderRadius.sm,
   },
   approveBtn: {
-    backgroundColor: '#0F766E',
+    backgroundColor: THEME.colors.primary,
   },
   suspendBtn: {
-    backgroundColor: '#DC2626',
+    backgroundColor: THEME.colors.error,
   },
   pendingBtn: {
-    backgroundColor: '#F0FDFA',
+    backgroundColor: THEME.colors.primarySoft,
     borderWidth: 1,
     borderColor: '#99F6E4',
   },
@@ -1275,14 +1192,11 @@ const styles = StyleSheet.create({
   docActionBtnTextTeal: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#0F766E',
+    color: THEME.colors.primary,
   },
-
-  // Complaints Cards
   complaintCard: {
     marginBottom: 12,
     padding: 14,
-    borderRadius: THEME.borderRadius.md,
   },
   complaintHeader: {
     flexDirection: 'row',
@@ -1297,30 +1211,23 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingRight: 6,
   },
-  complaintIconBox: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#FEF3C7',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   complaintSubject: {
     fontSize: 14,
     fontWeight: '700',
     color: THEME.colors.textPrimary,
+    flex: 1,
   },
   complaintQuoteBox: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: THEME.colors.background,
     padding: 10,
     borderRadius: 8,
     borderLeftWidth: 3,
-    borderLeftColor: '#F59E0B',
+    borderLeftColor: THEME.colors.warning,
     marginBottom: 10,
   },
   complaintDetails: {
     fontSize: 12,
-    color: '#334155',
+    color: THEME.colors.textSecondary,
     fontStyle: 'italic',
     lineHeight: 17,
   },
@@ -1337,23 +1244,21 @@ const styles = StyleSheet.create({
   },
   complaintMetaText: {
     fontSize: 11,
-    color: '#64748B',
+    color: THEME.colors.textSecondary,
     fontWeight: '500',
   },
   resolutionBox: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#F0FDF4',
+    backgroundColor: THEME.colors.successSoft,
     padding: 8,
     borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#BBF7D0',
     marginTop: 6,
   },
   resolutionNotes: {
     fontSize: 11,
-    color: '#166534',
+    color: THEME.colors.badgeCompletedText,
     fontWeight: '600',
     flex: 1,
   },
@@ -1362,22 +1267,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    backgroundColor: '#0D9488',
-    paddingVertical: 8,
-    borderRadius: 6,
+    backgroundColor: THEME.colors.primary,
+    paddingVertical: 10,
+    borderRadius: THEME.borderRadius.sm,
     marginTop: 6,
   },
   resolveComplaintBtnText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
     color: '#FFFFFF',
   },
-
-  // Audit Log Cards
   auditDisclaimer: {
-    backgroundColor: '#F0FDFA',
+    backgroundColor: THEME.colors.primarySoft,
     borderColor: '#99F6E4',
-    borderWidth: 1,
     marginBottom: 12,
     padding: 12,
   },
@@ -1386,42 +1288,33 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: 10,
   },
-  auditShieldBox: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#CCFBF1',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   auditDisclaimerTitle: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#0F766E',
+    color: THEME.colors.primary,
     marginBottom: 2,
   },
   auditDisclaimerText: {
-    fontSize: 11,
-    color: '#134E4A',
+    fontSize: 12,
+    color: THEME.colors.primaryDark,
     lineHeight: 16,
   },
   auditCard: {
     marginBottom: 8,
     padding: 12,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
   },
   auditTopRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 6,
+    marginBottom: 8,
+    gap: 8,
   },
   auditActionBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: 8,
+    flex: 1,
   },
   auditActionText: {
     fontSize: 12,
@@ -1431,7 +1324,7 @@ const styles = StyleSheet.create({
   auditEntityText: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#64748B',
+    color: THEME.colors.textSecondary,
   },
   auditTimeRow: {
     flexDirection: 'row',
@@ -1440,11 +1333,11 @@ const styles = StyleSheet.create({
   },
   auditTime: {
     fontSize: 10,
-    color: '#94A3B8',
+    color: THEME.colors.textMuted,
   },
   auditDetailsText: {
     fontSize: 12,
-    color: '#334155',
+    color: THEME.colors.textSecondary,
     lineHeight: 16,
     marginBottom: 8,
   },
@@ -1454,40 +1347,38 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 8,
     borderTopWidth: 1,
-    borderColor: '#F8FAFC',
+    borderColor: THEME.colors.borderLight,
   },
   auditActorBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
+    flex: 1,
   },
   auditActorText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#475569',
+    color: THEME.colors.textSecondary,
   },
   hashBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#F0FDFA',
+    backgroundColor: THEME.colors.primarySoft,
     paddingHorizontal: 7,
     paddingVertical: 2,
     borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#CCFBF1',
   },
   hashText: {
     fontSize: 10,
     fontWeight: '700',
-    color: '#0F766E',
+    color: THEME.colors.primary,
   },
-
   emptyCard: {
     alignItems: 'center',
     justifyContent: 'center',
     padding: 30,
-    backgroundColor: '#FFFFFF',
+    gap: 4,
   },
   emptyTitle: {
     fontSize: 14,
@@ -1501,16 +1392,30 @@ const styles = StyleSheet.create({
     color: THEME.colors.textMuted,
     textAlign: 'center',
   },
-  adminFooter: {
-    marginTop: 16,
-    marginBottom: 20,
+  emergencyFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+    marginTop: 4,
+    gap: 5,
+  },
+  emergencyFooterText: {
+    fontSize: 11,
+    color: THEME.colors.textMuted,
+  },
+  emergencyNumber: {
+    fontWeight: '800',
+    color: THEME.colors.error,
   },
   fullResetBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#F0FDFA',
+    marginHorizontal: THEME.spacing.base,
+    marginTop: 16,
+    backgroundColor: THEME.colors.primarySoft,
     borderWidth: 1,
     borderColor: '#99F6E4',
     paddingVertical: 12,
@@ -1519,6 +1424,6 @@ const styles = StyleSheet.create({
   fullResetBtnText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#0F766E',
+    color: THEME.colors.primary,
   },
 });

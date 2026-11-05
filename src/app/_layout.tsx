@@ -1,4 +1,4 @@
-// Root Layout with Safe Area, QueryClient, and Demo Switching Header
+// Root Layout with Safe Area, QueryClient, and Session Bar
 import React, { useState } from 'react';
 import { Stack, router } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -18,22 +18,10 @@ const queryClient = new QueryClient({
   },
 });
 
-function DemoSwitchBanner() {
-  const { currentUser, logout, loginDemo, resetDemoData } = useAuthStore();
+function SessionBar() {
+  const { currentUser, logout, resetDemoData } = useAuthStore();
 
   if (!currentUser) return null;
-
-  const switchTo = async (roleKey: 'admin' | 'doctor1' | 'patient1') => {
-    try {
-      const u = await loginDemo(roleKey);
-      if (u.role === 'patient') router.replace('/(patient)');
-      else if (u.role === 'doctor') router.replace('/(doctor)');
-      else if (u.role === 'admin') router.replace('/(admin)');
-    } catch {
-      logout();
-      router.replace('/(auth)/welcome');
-    }
-  };
 
   return (
     <View style={styles.demoBar}>
@@ -43,11 +31,6 @@ function DemoSwitchBanner() {
         </Text>
       </View>
       <View style={styles.actions}>
-        {currentUser.role !== 'admin' && (
-          <Pressable onPress={() => switchTo('admin')} style={[styles.actionBtn, styles.adminQuickBtn]}>
-            <Text style={styles.adminQuickText}>👑 Admin</Text>
-          </Pressable>
-        )}
         <Pressable
           onPress={() => {
             resetDemoData();
@@ -64,7 +47,7 @@ function DemoSwitchBanner() {
           }}
           style={[styles.actionBtn, styles.logoutBtn]}
         >
-          <Text style={styles.logoutText}>Switch</Text>
+          <Text style={styles.logoutText}>Sign Out</Text>
         </Pressable>
       </View>
     </View>
@@ -79,7 +62,7 @@ export default function RootLayout() {
       <QueryClientProvider client={queryClient}>
         <StatusBar style="dark" />
         <View style={styles.container}>
-          <DemoSwitchBanner />
+          <SessionBar />
           <Stack
             screenOptions={{
               headerShown: false,
@@ -142,14 +125,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#B91C1C',
   },
   logoutText: {
-    color: '#FFF',
-    fontSize: 10,
-    fontWeight: '700',
-  },
-  adminQuickBtn: {
-    backgroundColor: '#D97706',
-  },
-  adminQuickText: {
     color: '#FFF',
     fontSize: 10,
     fontWeight: '700',

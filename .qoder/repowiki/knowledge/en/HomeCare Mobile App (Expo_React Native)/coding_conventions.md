@@ -1,0 +1,3 @@
+- Navigation and routing go exclusively through Expo Router files under `src/app/`, with `_layout.tsx` defining navigators and non-route code kept outside that directory.
+- New dependencies are added with `npx expo install` rather than a package manager directly, so versions stay aligned with the Expo SDK major.
+- TypeScript source lives under `src/` and is imported via the `@/*` path alias defined in `tsconfig.json`.

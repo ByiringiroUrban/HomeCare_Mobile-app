@@ -1,0 +1,1 @@
+Expo SDK ~57 with expo-router, React Native 0.86 / React 19, TypeScript 6 (strict), Zustand for state, TanStack Query for server state, and lucide-react-native icons — all resolved against the Expo SDK version via `npx expo install`.

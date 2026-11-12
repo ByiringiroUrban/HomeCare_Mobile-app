@@ -1,0 +1,1 @@
+FastAPI-based REST backend for the HomeCare platform providing patient and doctor registration, JWT authentication, and a PostgreSQL-backed user/profile data layer.

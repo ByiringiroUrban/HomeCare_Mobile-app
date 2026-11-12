@@ -1,4 +1,5 @@
-// In-memory persistent reactive mock database store with account isolation and domain eventsimport {
+// In-memory persistent reactive mock database store with account isolation and domain events
+import {
   User,
   PatientProfile,
   DoctorProfile,

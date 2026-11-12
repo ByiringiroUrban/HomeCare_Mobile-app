@@ -1,0 +1,1 @@
+Expo Router-based React Native client for the HomeCare platform, bootstrapped via index.ts/App.tsx and configured through app.json to target iOS, Android, and web.

@@ -1,0 +1,1 @@
+`npx expo start` launches the dev server; `--android`/`--ios`/`--web` select platforms. New packages are installed with `npx expo install <pkg>` (not npm/yarn/pnpm/bun add) to keep versions SDK-compatible. Lint/typecheck via `npx expo lint` and `npx tsc --noEmit`; diagnose with `npx expo-doctor`.

@@ -19,6 +19,18 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "change-this-super-secret-key-in-production-min-32-chars"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
+
+    # One-time codes (account verification & password reset)
+    OTP_EXPIRE_MINUTES: int = 10
+    OTP_MAX_ATTEMPTS: int = 5
+    # Until an SMS/email provider is configured, codes are written to the server log
+    OTP_LOG_TO_CONSOLE: bool = True
+
+    # Initial administrator, created automatically at startup when no admin exists
+    ADMIN_NAME: Optional[str] = None
+    ADMIN_EMAIL: Optional[str] = None
+    ADMIN_PHONE: Optional[str] = None
+    ADMIN_PASSWORD: Optional[str] = None
     
     model_config = SettingsConfigDict(
         env_file=str(ENV_PATH) if ENV_PATH.exists() else ".env",

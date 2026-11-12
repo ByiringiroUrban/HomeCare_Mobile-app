@@ -1,0 +1,6 @@
+- Database sessions are injected into endpoints via `Depends(get_db)` rather than created inline, keeping connection lifecycle scoped to the request.
+- Eager-loading of related profiles is done with `selectinload(User.patient_profile)` / `selectinload(User.doctor_profile)` on every query that returns a `User` to avoid N+1 serialization issues.
+- Request payloads and responses are typed with Pydantic `BaseModel` classes defined in `app/schemas/auth.py`, and ORM-to-response mapping uses `class Config: from_attributes = True`.
+- Authentication is enforced by declaring `current_user: User = Depends(get_current_user)` on protected endpoints, which validates the bearer token and raises a 401 with `WWW-Authenticate: Bearer` on failure.
+- Domain enums (`UserRole`, `DoctorVerificationStatus`) are declared as `str`-based `enum.Enum` subclasses both in the SQLAlchemy model and mirrored in the Pydantic schemas for consistent serialization.
+- Configuration is accessed exclusively through the singleton `settings` instance from `app.core.config`, never read directly from `os.environ`.

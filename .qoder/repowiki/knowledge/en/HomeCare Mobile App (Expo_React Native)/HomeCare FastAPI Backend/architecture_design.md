@@ -1,0 +1,11 @@
+Layered FastAPI application under `app/` with clear separation of concerns:
+- `main.py` bootstraps the FastAPI app, registers CORS middleware, mounts the `/api/v1/auth` router via `include_router`, and uses an async lifespan to connect to Neon PostgreSQL and run `Base.metadata.create_all` on startup.
+- `core/config.py` centralizes environment-driven settings via `pydantic_settings.BaseSettings` (`.env` file), exposing `DATABASE_URL`, JWT `SECRET_KEY`/`ALGORITHM`/`ACCESS_TOKEN_EXPIRE_MINUTES`, and project metadata.
+- `core/security.py` wraps `passlib` bcrypt hashing and `python-jose` HS256 JWT encoding/decoding.
+- `db/session.py` creates an `asyncpg` engine from the configured URL (auto-converting `postgresql://` → `postgresql+asyncpg://` and stripping libpq SSL params for asyncpg), exposes `AsyncSessionLocal`, the shared `Base`, and a `get_db()` dependency that yields an `AsyncSession` per request.
+- `models/user.py` defines SQLAlchemy declarative models (`User`, `PatientProfile`, `DoctorProfile`) with `UserRole` / `DoctorVerificationStatus` enums, UUID primary keys, and one-to-one relationships between User and each profile.
+- `schemas/auth.py` holds Pydantic v2 request/response models mirroring the domain entities; response models use `from_attributes = True` to serialize ORM objects.
+- `api/auth.py` is the only API router, exposing `/register/patient`, `/register/doctor`, `/login`, `/verify-otp`, `/reset-password`, and `/me`; it composes `Depends(get_db)` for DB access and `Depends(get_current_user)` for auth.
+- `api/deps.py` implements the `OAuth2PasswordBearer` scheme and `get_current_user` dependency that decodes the JWT, fetches the hydrated User (with eager-loaded profiles), and raises a 401 with `WWW-Authenticate: Bearer` on failure.
+- Standalone scripts at the module root (`migrate_db.py`, `seed_db.py`, `verify_auth.py`) perform ad-hoc database migrations and verification tasks using the same engine.
+Dependency direction is strictly inward: api → core/db/models/schemas; no cross-imports between sibling packages.

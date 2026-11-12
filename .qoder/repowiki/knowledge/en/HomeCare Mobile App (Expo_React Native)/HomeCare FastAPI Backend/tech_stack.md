@@ -1,0 +1,1 @@
+FastAPI + Starlette, SQLAlchemy 2.x with `sqlalchemy.ext.asyncio` (asyncpg dialect) against Neon PostgreSQL, Pydantic v2 (`pydantic-settings` for env loading), `python-jose` for HS256 JWT tokens, and `passlib` with bcrypt for password hashing.

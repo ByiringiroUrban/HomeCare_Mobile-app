@@ -12,6 +12,7 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
 import { THEME } from '../../../constants/theme';
+import { formatMoney } from '../../../utils/money';
 import { useAuthStore } from '../../../stores/authStore';
 import { patientService } from '../../../services/api';
 import { Badge } from '../../../components/ui/Badge';
@@ -126,6 +127,8 @@ export default function VisitDetailScreen() {
     visit.status
   );
 
+  const canJoinVideo = ['confirmed', 'on_the_way', 'arrived', 'in_consultation'].includes(visit.status);
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       {/* Top Status Header */}
@@ -141,6 +144,26 @@ export default function VisitDetailScreen() {
           Attending: {visit.doctorName} ({visit.doctorSpecialty})
         </Text>
       </View>
+
+      {/* Online video consultation entry point */}
+      {canJoinVideo && (
+        <Card style={styles.videoCard}>
+          <View style={styles.videoHeaderRow}>
+            <Ionicons name="videocam" size={18} color={THEME.colors.primary} />
+            <Text style={styles.videoTitle}>Online video consultation</Text>
+          </View>
+          <Text style={styles.videoSub}>
+            Meet your doctor face to face in the secure HomeCare meeting room. Camera and
+            microphone are requested when you join.
+          </Text>
+          <Button
+            title="Join Video Consultation"
+            size="sm"
+            onPress={() => router.push(`/meeting/${visit.id}` as any)}
+            style={{ marginTop: 10 }}
+          />
+        </Card>
+      )}
 
       {/* Alternative Time Acceptance Banner */}
       {visit.status === 'alternative_proposed' && (
@@ -236,7 +259,7 @@ export default function VisitDetailScreen() {
           <Ionicons name="location-outline" size={15} color={THEME.colors.primary} style={{ marginRight: 4 }} />
           <Text style={styles.addressLine}>{visit.visitAddress}</Text>
         </View>
-        <Text style={styles.districtLine}>Kigali District: {visit.district}</Text>
+        <Text style={styles.districtLine}>District: {visit.district}</Text>
         {visit.accessInstructions ? (
           <Text style={styles.instructionsLine}>Landmark/Gate: {visit.accessInstructions}</Text>
         ) : null}
@@ -261,7 +284,7 @@ export default function VisitDetailScreen() {
         <Text style={styles.detailsCardTitle}>Billing & Payment Status</Text>
         <View style={styles.feeLine}>
           <Text style={styles.feeLabel}>Total Consultation & Travel:</Text>
-          <Text style={styles.feeValue}>{visit.totalFeeRwf.toLocaleString()} RWF</Text>
+          <Text style={styles.feeValue}>{formatMoney(visit.totalFeeRwf, visit.currency)}</Text>
         </View>
         <View style={styles.feeLine}>
           <Text style={styles.feeLabel}>Payment Method:</Text>
@@ -635,5 +658,26 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 8,
     marginTop: 8,
+  },
+  videoCard: {
+    backgroundColor: THEME.colors.primarySoft,
+    borderColor: '#99F6E4',
+    marginBottom: THEME.spacing.md,
+  },
+  videoHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  videoTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: THEME.colors.textPrimary,
+  },
+  videoSub: {
+    fontSize: 12,
+    color: THEME.colors.textSecondary,
+    lineHeight: 17,
+    marginTop: 4,
   },
 });

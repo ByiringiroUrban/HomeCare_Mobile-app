@@ -11,13 +11,17 @@ import {
 import { router, useLocalSearchParams } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
-import { THEME, APP_CONFIG } from '../../constants/theme';
+import { THEME } from '../../constants/theme';
 import { patientService } from '../../services/api';
 import { DoctorCard } from '../../components/ui/DoctorCard';
 import { Button } from '../../components/ui/Button';
+import { CountryChips } from '../../components/ui/CountryChips';
+import { useCountry, useLocaleStore } from '../../stores/localeStore';
 
 export default function DoctorDiscoveryScreen() {
   const params = useLocalSearchParams<{ initialSpecialty?: string }>();
+  const country = useCountry();
+  const setCountry = useLocaleStore((state) => state.setCountry);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSpecialty, setSelectedSpecialty] = useState<string>(
     params.initialSpecialty || 'All'
@@ -37,6 +41,7 @@ export default function DoctorDiscoveryScreen() {
   const { data: doctors = [], isLoading, refetch } = useQuery({
     queryKey: [
       'doctors-search',
+      country.code,
       searchQuery,
       selectedSpecialty,
       selectedDistrict,
@@ -46,6 +51,7 @@ export default function DoctorDiscoveryScreen() {
     queryFn: () =>
       patientService.searchDoctors({
         query: searchQuery,
+        country: country.code,
         specialty: selectedSpecialty === 'All' ? undefined : selectedSpecialty,
         district: selectedDistrict === 'All' ? undefined : selectedDistrict,
         language: selectedLanguage === 'All' ? undefined : selectedLanguage,
@@ -104,6 +110,18 @@ export default function DoctorDiscoveryScreen() {
         </Pressable>
       </View>
 
+      {/* Market selector — specialists are matched to the chosen country */}
+      <CountryChips
+        value={country.code}
+        onChange={(code) => {
+          setCountry(code);
+          setSelectedDistrict('All');
+          setSelectedLanguage('All');
+        }}
+        label="Country"
+        style={styles.marketPicker}
+      />
+
       {/* Specialty Filter Pill Carousel */}
       <View style={styles.pillRow}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -139,10 +157,10 @@ export default function DoctorDiscoveryScreen() {
             </Pressable>
           </View>
 
-          {/* Kigali District */}
-          <Text style={styles.filterLabel}>Kigali Coverage District</Text>
+          {/* Coverage district in the selected country */}
+          <Text style={styles.filterLabel}>{country.name} Coverage District</Text>
           <View style={styles.optionsRow}>
-            {['All', ...APP_CONFIG.coverageDistricts].map((d) => (
+            {['All', ...country.districts].map((d) => (
               <Pressable
                 key={d}
                 style={[styles.optionChip, selectedDistrict === d && styles.optionChipActive]}
@@ -160,7 +178,7 @@ export default function DoctorDiscoveryScreen() {
           {/* Languages */}
           <Text style={styles.filterLabel}>Consultation Language</Text>
           <View style={styles.optionsRow}>
-            {['All', 'Kinyarwanda', 'English', 'French'].map((lang) => (
+            {['All', ...country.languages].map((lang) => (
               <Pressable
                 key={lang}
                 style={[styles.optionChip, selectedLanguage === lang && styles.optionChipActive]}
@@ -207,7 +225,8 @@ export default function DoctorDiscoveryScreen() {
             </View>
             <Text style={styles.emptyTitle}>No matching doctors found</Text>
             <Text style={styles.emptySubtitle}>
-              Try adjusting your specialty or district filter to discover available physicians in Kigali.
+              Try adjusting the specialty or district filter to discover available physicians in{' '}
+              {country.name}.
             </Text>
             <Button
               title="Clear Filters"
@@ -282,6 +301,10 @@ const styles = StyleSheet.create({
   filterToggleTextActive: {
     color: THEME.colors.primary,
     fontWeight: '700',
+  },
+  marketPicker: {
+    paddingHorizontal: THEME.spacing.base,
+    paddingTop: 10,
   },
   pillRow: {
     paddingVertical: 10,

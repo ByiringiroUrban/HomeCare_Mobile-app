@@ -1,4 +1,4 @@
-// Ultra-premium animated splash & branded preloader for HomeCare Rwanda
+// Ultra-premium animated splash & branded preloader for HomeCare East Africa
 import React, { useEffect, useRef } from 'react';
 import {
   View,
@@ -219,11 +219,11 @@ export const SplashPreloader: React.FC<SplashPreloaderProps> = ({
         >
           <View style={styles.badgeRow}>
             <Ionicons name="shield-checkmark" size={13} color={THEME.colors.primaryDark} />
-            <Text style={styles.badgeLabel}>MINISANTE VERIFIED SPECIALISTS</Text>
+            <Text style={styles.badgeLabel}>NATIONALLY LICENSED SPECIALISTS</Text>
           </View>
 
           <Text style={styles.appTitle}>HomeCare</Text>
-          <Text style={styles.tagline}>Doctor Home Consultations • Kigali</Text>
+          <Text style={styles.tagline}>Doctor Home Consultations • East Africa</Text>
 
           {/* Smooth modern progress indicator bar */}
           <View style={styles.progressBarBg}>
@@ -242,11 +242,11 @@ export const SplashPreloader: React.FC<SplashPreloaderProps> = ({
         <View style={styles.footerRow}>
           <Ionicons name="lock-closed-outline" size={12} color={THEME.colors.textMuted} />
           <Text style={styles.footerText}>
-            Rwandan Law No. 058/2021 Data Protection Compliant
+            Data Protection Compliant in Every Market
           </Text>
         </View>
         <Text style={styles.emergencyDisclaimer}>
-          Emergency Hotline: <Text style={styles.emergencyBold}>112 (SAMU Rwanda)</Text>
+          Emergency Hotline: <Text style={styles.emergencyBold}>112 · 999 · 117</Text>
         </Text>
       </Animated.View>
     </Animated.View>

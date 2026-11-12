@@ -10,7 +10,8 @@ import {
 import { useLocalSearchParams, router } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
-import { THEME, APP_CONFIG } from '../../../constants/theme';
+import { THEME, getCountryConfig } from '../../../constants/theme';
+import { formatMoney, currencyOf } from '../../../utils/money';
 import { useAuthStore } from '../../../stores/authStore';
 import { patientService } from '../../../services/api';
 import { InputField } from '../../../components/ui/InputField';
@@ -76,10 +77,11 @@ export default function BookVisitScreen() {
   };
 
   const handleUseGpsPin = () => {
-    // Simulated GPS pin resolution for Kigali
-    setAddress('KG 690 St, Near Kigali Heights, Kimihurura');
-    setDistrict('Gasabo');
-    alert('GPS pin recorded: Kimihurura (-1.9536, 30.0897)');
+    // Simulated GPS pin resolution around the specialist's service city
+    const market = getCountryConfig(doctor?.country);
+    setAddress(`${market.capitalCity} — GPS pin captured (house number to be confirmed)`);
+    setDistrict(doctor?.coverageDistricts[0] || market.districts[0]);
+    alert(`GPS pin recorded in ${market.capitalCity}.`);
   };
 
   const handleSubmitBooking = async () => {
@@ -112,10 +114,12 @@ export default function BookVisitScreen() {
         conditionDescription: conditionDescription.trim(),
         commonSymptoms: selectedSymptoms,
         attachmentUrls: hasAttachment
-          ? ['https://homecare.rw/uploads/sample-prior-prescription.jpg']
+          ? ['https://homecare.africa/uploads/sample-prior-prescription.jpg']
           : [],
         visitAddress: address.trim(),
         district,
+        country: doctor?.country || 'RW',
+        currency: currencyOf(doctor),
         accessInstructions: accessNotes.trim(),
         coordinates: { latitude: -1.9366, longitude: 30.1287 },
         consultationFeeRwf: consultationFee,
@@ -280,8 +284,8 @@ export default function BookVisitScreen() {
         />
 
         <InputField
-          label="Kigali District *"
-          placeholder="Gasabo / Kicukiro / Nyarugenge"
+          label={`${getCountryConfig(doctor?.country).name} District *`}
+          placeholder={getCountryConfig(doctor?.country).districts.slice(0, 3).join(' / ')}
           value={district}
           onChangeText={setDistrict}
         />
@@ -301,11 +305,13 @@ export default function BookVisitScreen() {
         <Card style={styles.feeBreakdownCard}>
           <View style={styles.feeRow}>
             <Text style={styles.feeRowLabel}>Specialist Consultation Fee</Text>
-            <Text style={styles.feeRowVal}>{consultationFee.toLocaleString()} RWF</Text>
+            <Text style={styles.feeRowVal}>
+              {formatMoney(consultationFee, currencyOf(doctor))}
+            </Text>
           </View>
           <View style={styles.feeRow}>
             <Text style={styles.feeRowLabel}>Travel & Transportation Fee</Text>
-            <Text style={styles.feeRowVal}>{travelFee.toLocaleString()} RWF</Text>
+            <Text style={styles.feeRowVal}>{formatMoney(travelFee, currencyOf(doctor))}</Text>
           </View>
           <View style={styles.feeRow}>
             <Text style={styles.feeRowLabel}>Laboratory Testing Fee</Text>
@@ -314,7 +320,7 @@ export default function BookVisitScreen() {
           <View style={styles.feeDivider} />
           <View style={styles.feeRow}>
             <Text style={styles.totalLabel}>Estimated Total</Text>
-            <Text style={styles.totalVal}>{total.toLocaleString()} RWF</Text>
+            <Text style={styles.totalVal}>{formatMoney(total, currencyOf(doctor))}</Text>
           </View>
         </Card>
 
@@ -353,7 +359,7 @@ export default function BookVisitScreen() {
         {paymentMethod !== 'cash_on_visit' && (
           <InputField
             label="Mobile Money Number (Simulated)"
-            placeholder="+250 788 000 000"
+            placeholder={getCountryConfig(doctor?.country).phonePlaceholder}
             value={momoNumber}
             onChangeText={setMomoNumber}
             keyboardType="phone-pad"
@@ -364,7 +370,7 @@ export default function BookVisitScreen() {
 
       {/* Step 8 & 9: Submission */}
       <Button
-        title={`Confirm & Request Visit (${total.toLocaleString()} RWF)`}
+        title={`Confirm & Request Visit (${formatMoney(total, currencyOf(doctor))})`}
         size="lg"
         onPress={handleSubmitBooking}
         loading={submitting}

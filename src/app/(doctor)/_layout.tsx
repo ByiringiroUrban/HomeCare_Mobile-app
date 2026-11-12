@@ -24,13 +24,14 @@ export default function DoctorTabsLayout() {
         tabBarStyle: {
           backgroundColor: THEME.colors.surface,
           borderTopColor: THEME.colors.border,
-          height: 62,
-          paddingBottom: 8,
+          height: 70,
+          paddingBottom: 10,
           paddingTop: 6,
         },
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: '600',
+          lineHeight: 14,
         },
         headerStyle: {
           backgroundColor: THEME.colors.surface,

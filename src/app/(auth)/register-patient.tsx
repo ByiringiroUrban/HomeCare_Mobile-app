@@ -10,6 +10,8 @@ import {
 import { router } from 'expo-router';
 import { THEME } from '../../constants/theme';
 import { authService } from '../../services/api';
+import { CountryChips } from '../../components/ui/CountryChips';
+import { useCountry, useLocaleStore } from '../../stores/localeStore';
 import { InputField } from '../../components/ui/InputField';
 import { Button } from '../../components/ui/Button';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,6 +22,8 @@ export default function RegisterPatientScreen() {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [consentTerms, setConsentTerms] = useState(false);
+  const country = useCountry();
+  const setCountry = useLocaleStore((state) => state.setCountry);
 
   const [consentHealthData, setConsentHealthData] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -55,6 +59,7 @@ export default function RegisterPatientScreen() {
         email: email.trim(),
         phone: phone.trim(),
         password,
+        country: country.code,
       });
       // Navigate to OTP verification
       router.push({
@@ -77,6 +82,8 @@ export default function RegisterPatientScreen() {
         </Text>
       </View>
 
+      <CountryChips value={country.code} onChange={setCountry} label="Country of Residence" />
+
       {errorMsg ? (
         <View style={styles.errorBox}>
           <Text style={styles.errorText}>{errorMsg}</Text>
@@ -91,8 +98,8 @@ export default function RegisterPatientScreen() {
       />
 
       <InputField
-        label="Phone Number (Rwanda)"
-        placeholder="+250 788 000 000"
+        label={`Phone Number (${country.name})`}
+        placeholder={country.phonePlaceholder}
         value={phone}
         onChangeText={setPhone}
         keyboardType="phone-pad"
@@ -138,7 +145,9 @@ export default function RegisterPatientScreen() {
             {consentHealthData && <Ionicons name="checkmark" size={14} color="#FFF" />}
           </View>
           <Text style={styles.checkboxLabel}>
-            I give explicit consent to the collection and processing of my sensitive medical consultation records and laboratory test results as mandated under Rwandan Law No. 058/2021 relating to personal data protection.
+            I give explicit consent to the collection and processing of my sensitive medical
+            consultation records and laboratory test results as mandated under{' '}
+            {country.dataProtectionLaw}.
           </Text>
         </Pressable>
       </View>

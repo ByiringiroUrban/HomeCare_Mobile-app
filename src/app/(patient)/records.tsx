@@ -73,7 +73,7 @@ export default function PatientRecordsScreen() {
               consultations.map((rec) => (
                 <Card key={rec.id} style={styles.recordCard}>
                   <View style={styles.recordHeader}>
-                    <View>
+                    <View style={styles.recordHeaderInfo}>
                       <Text style={styles.recordDate}>{rec.createdAt.split('T')[0]}</Text>
                       <Text style={styles.diagnosisTitle}>Diagnosis: {rec.diagnosis}</Text>
                       {rec.icdCode && <Text style={styles.icdCode}>ICD Code: {rec.icdCode}</Text>}
@@ -104,7 +104,7 @@ export default function PatientRecordsScreen() {
                     <View style={styles.followUpCard}>
                       <View style={styles.followUpHeader}>
                         <Ionicons name="calendar-outline" size={16} color="#92400E" />
-                        <Text style={styles.followUpText}>
+                        <Text style={[styles.followUpText, styles.followUpTitle]}>
                           Follow-up Recommended for: {rec.followUpDate}
                         </Text>
                       </View>
@@ -147,7 +147,7 @@ export default function PatientRecordsScreen() {
                       <Text style={styles.rxLabel}>Duration:</Text>
                       <Text style={styles.rxVal}>{rx.durationDays} Days</Text>
                     </View>
-                    <Text style={styles.rxInstructions}>"{rx.instructions}"</Text>
+                    <Text style={styles.rxInstructions}>{`"${rx.instructions}"`}</Text>
                   </Card>
                 ))
               )
@@ -182,7 +182,9 @@ export default function PatientRecordsScreen() {
                   </Text>
 
                   <View style={styles.labFooter}>
-                    <Text style={styles.doctorSign}>Published by {res.doctorName}</Text>
+                    <Text style={[styles.doctorSign, styles.labSignFlex]}>
+                      Published by {res.doctorName}
+                    </Text>
                     <Pressable
                       style={styles.viewPdfBtn}
                       onPress={() => router.push(`/(patient)/result/${res.id}` as any)}
@@ -249,6 +251,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
+    gap: 8,
+  },
+  recordHeaderInfo: {
+    flex: 1,
+    minWidth: 0,
   },
   recordDate: {
     fontSize: 11,
@@ -323,6 +330,10 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#854D0E',
   },
+  followUpTitle: {
+    flex: 1,
+    minWidth: 0,
+  },
   followUpSub: {
     fontSize: 11,
     color: '#713F12',
@@ -361,11 +372,14 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: THEME.colors.textSecondary,
     width: 80,
+    flexShrink: 0,
   },
   rxVal: {
     fontSize: 12,
     fontWeight: '600',
     color: THEME.colors.textPrimary,
+    flex: 1,
+    minWidth: 0,
   },
   rxInstructions: {
     fontSize: 12,
@@ -426,8 +440,14 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: THEME.colors.textSecondary,
   },
+  labSignFlex: {
+    flex: 1,
+    minWidth: 0,
+  },
   viewPdfBtn: {
     paddingVertical: 4,
+    flexShrink: 0,
+    marginLeft: 8,
   },
   viewPdfText: {
     fontSize: 12,

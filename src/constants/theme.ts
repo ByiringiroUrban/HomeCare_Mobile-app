@@ -1,11 +1,16 @@
 // Centralized configuration and design system tokens for HomeCare
-// Supported East African markets: Rwanda (RW), Kenya (KE), Tanzania (TZ)
+// HomeCare operates across the East African Community: Rwanda, Kenya, Uganda,
+// Tanzania, Burundi and South Sudan. Every market has its own currency, emergency
+// number, medical regulator and coverage districts.
 
-export type SupportedCountry = 'RW' | 'KE' | 'TZ';
+export type SupportedCountry = 'RW' | 'KE' | 'TZ' | 'UG' | 'BI' | 'SS';
+
+export const DEFAULT_COUNTRY: SupportedCountry = 'RW';
 
 export interface CountryConfig {
   name: string;
   code: SupportedCountry;
+  flag: string;
   currency: string;
   currencySymbol: string;
   emergencyPhone: string;
@@ -13,56 +18,166 @@ export interface CountryConfig {
   phonePrefix: string;
   phonePlaceholder: string;
   regulatoryBody: string;
+  regulatorShort: string;
+  licenseExample: string;
+  dataProtectionLaw: string;
+  capitalCity: string;
   exampleCities: string[];
+  /** Coverage districts / neighbourhoods used by search filters and doctor onboarding. */
+  districts: string[];
+  languages: string[];
+  /** Typical home-visit travel fee in local currency (demo baseline). */
+  baseTravelFee: number;
 }
 
 export const COUNTRY_CONFIGS: Record<SupportedCountry, CountryConfig> = {
   RW: {
     name: 'Rwanda',
     code: 'RW',
+    flag: '🇷🇼',
     currency: 'RWF',
     currencySymbol: 'RWF',
-    emergencyPhone: '912',
+    emergencyPhone: '112',
     emergencyService: 'SAMU Rwanda',
     phonePrefix: '+250',
     phonePlaceholder: '+250 788 000 000',
     regulatoryBody: 'Rwanda Medical and Dental Council (RMDC)',
-    exampleCities: ['Kigali', 'Butare', 'Gisenyi', 'Ruhengeri'],
+    regulatorShort: 'RMDC',
+    licenseExample: 'RMC/2018/0412',
+    dataProtectionLaw: 'Law No. 058/2021 on Personal Data Protection',
+    capitalCity: 'Kigali',
+    exampleCities: ['Kigali', 'Huye', 'Musanze', 'Rubavu', 'Muhanga'],
+    districts: ['Gasabo', 'Kicukiro', 'Nyarugenge', 'Musanze', 'Huye', 'Rubavu'],
+    languages: ['Kinyarwanda', 'English', 'French'],
+    baseTravelFee: 5000,
   },
   KE: {
     name: 'Kenya',
     code: 'KE',
+    flag: '🇰🇪',
     currency: 'KES',
-    currencySymbol: 'KSh',
+    currencySymbol: 'KES',
     emergencyPhone: '999',
     emergencyService: 'Kenya Emergency Services',
     phonePrefix: '+254',
     phonePlaceholder: '+254 712 000 000',
-    regulatoryBody: 'Kenya Medical Practitioners & Dentists Council (KMPDC)',
-    exampleCities: ['Nairobi', 'Mombasa', 'Kisumu', 'Nakuru'],
+    regulatoryBody: 'Kenya Medical Practitioners and Dentists Council (KMPDC)',
+    regulatorShort: 'KMPDC',
+    licenseExample: 'KMPDC/2016/8812',
+    dataProtectionLaw: 'Data Protection Act, 2019',
+    capitalCity: 'Nairobi',
+    exampleCities: ['Nairobi', 'Mombasa', 'Kisumu', 'Nakuru', 'Eldoret'],
+    districts: ['Westlands', 'Kilimani', 'Nairobi CBD', 'Karen', 'Mombasa Island', 'Nyali', 'Kisumu Central', 'Nakuru Town'],
+    languages: ['Swahili', 'English'],
+    baseTravelFee: 500,
   },
   TZ: {
     name: 'Tanzania',
     code: 'TZ',
+    flag: '🇹🇿',
     currency: 'TZS',
-    currencySymbol: 'TSh',
-    emergencyPhone: '114',
+    currencySymbol: 'TZS',
+    emergencyPhone: '112',
     emergencyService: 'Tanzania Emergency Services',
     phonePrefix: '+255',
     phonePlaceholder: '+255 712 000 000',
     regulatoryBody: 'Medical Council of Tanganyika (MCT)',
-    exampleCities: ['Dar es Salaam', 'Arusha', 'Mwanza', 'Dodoma'],
+    regulatorShort: 'MCT',
+    licenseExample: 'MCT/2018/5509',
+    dataProtectionLaw: 'Personal Data Protection Act, 2022',
+    capitalCity: 'Dar es Salaam',
+    exampleCities: ['Dar es Salaam', 'Arusha', 'Dodoma', 'Mwanza', 'Zanzibar'],
+    districts: ['Kinondoni', 'Ilala', 'Ubungo', 'Temeke', 'Arusha City', 'Dodoma CBD', 'Mwanza City'],
+    languages: ['Swahili', 'English'],
+    baseTravelFee: 8000,
+  },
+  UG: {
+    name: 'Uganda',
+    code: 'UG',
+    flag: '🇺🇬',
+    currency: 'UGX',
+    currencySymbol: 'UGX',
+    emergencyPhone: '999',
+    emergencyService: 'Uganda Emergency Medical Services',
+    phonePrefix: '+256',
+    phonePlaceholder: '+256 772 000 000',
+    regulatoryBody: 'Uganda Medical and Dental Practitioners Council (UMDPC)',
+    regulatorShort: 'UMDPC',
+    licenseExample: 'UMDPC/2017/3320',
+    dataProtectionLaw: 'Data Protection and Privacy Act, 2019',
+    capitalCity: 'Kampala',
+    exampleCities: ['Kampala', 'Entebbe', 'Gulu', 'Mbarara', 'Jinja'],
+    districts: ['Kampala Central', 'Kololo', 'Nakawa', 'Entebbe', 'Mbarara City', 'Gulu City'],
+    languages: ['Luganda', 'English', 'Swahili'],
+    baseTravelFee: 15000,
+  },
+  BI: {
+    name: 'Burundi',
+    code: 'BI',
+    flag: '🇧🇮',
+    currency: 'BIF',
+    currencySymbol: 'BIF',
+    emergencyPhone: '117',
+    emergencyService: 'Burundi Emergency Services',
+    phonePrefix: '+257',
+    phonePlaceholder: '+257 79 000 000',
+    regulatoryBody: 'Ordre National des Médecins du Burundi (CNOMB)',
+    regulatorShort: 'CNOMB',
+    licenseExample: 'CNOMB/2015/2210',
+    dataProtectionLaw: 'Loi sur la protection des données personnelles, 2020',
+    capitalCity: 'Bujumbura',
+    exampleCities: ['Bujumbura', 'Gitega', 'Ngozi', 'Rumonge'],
+    districts: ['Bujumbura Mairie', 'Rohero', 'Kinindo', 'Gitega', 'Ngozi'],
+    languages: ['Kirundi', 'French', 'Swahili'],
+    baseTravelFee: 10000,
+  },
+  SS: {
+    name: 'South Sudan',
+    code: 'SS',
+    flag: '🇸🇸',
+    currency: 'SSP',
+    currencySymbol: 'SSP',
+    emergencyPhone: '999',
+    emergencyService: 'South Sudan Emergency Services',
+    phonePrefix: '+211',
+    phonePlaceholder: '+211 920 000 000',
+    regulatoryBody: 'South Sudan Medical Council (SSMC)',
+    regulatorShort: 'SSMC',
+    licenseExample: 'SSMC/2016/1180',
+    dataProtectionLaw: 'National Health Data Protection Policy',
+    capitalCity: 'Juba',
+    exampleCities: ['Juba', 'Wau', 'Malakal', 'Yei'],
+    districts: ['Juba Central', 'Munuki', 'Jebel', 'Wau', 'Malakal'],
+    languages: ['English', 'Juba Arabic'],
+    baseTravelFee: 12000,
   },
 };
+
+export const COUNTRY_CODES: SupportedCountry[] = ['RW', 'KE', 'TZ', 'UG', 'BI', 'SS'];
+
+export const COUNTRY_LIST: CountryConfig[] = COUNTRY_CODES.map((code) => COUNTRY_CONFIGS[code]);
+
+export const isSupportedCountry = (code?: string | null): code is SupportedCountry =>
+  !!code && (COUNTRY_CODES as string[]).includes(code);
+
+export const getCountryConfig = (code?: string | null): CountryConfig =>
+  COUNTRY_CONFIGS[isSupportedCountry(code) ? code : DEFAULT_COUNTRY];
+
+/** Every coverage district across all markets (search + onboarding filters). */
+export const ALL_DISTRICTS = COUNTRY_CODES.flatMap((code) => COUNTRY_CONFIGS[code].districts);
+
+export const COUNTRY_CODES_LABEL = COUNTRY_LIST.map((c) => c.name).join(', ');
 
 export const APP_CONFIG = {
   appName: 'HomeCare',
   appVersion: '1.0.0',
   tagline: 'Certified Doctor Home Visits Across East Africa',
-  supportedCountries: ['RW', 'KE', 'TZ'] as SupportedCountry[],
+  supportedCountries: COUNTRY_CODES,
   supportEmail: 'support@homecare.africa',
   supportPhone: '+250 788 123 456',
   demoOtpCode: '123456',
+  coverageDistricts: ALL_DISTRICTS,
+  defaultCountry: DEFAULT_COUNTRY,
   // Generic emergency disclaimer used when country is unknown
   emergencyDisclaimer:
     'HomeCare is not an emergency service. In life-threatening emergencies, dial your national emergency number immediately.',
@@ -93,7 +208,7 @@ export const THEME = {
     surfaceSubtle: '#F1F5F9', // slate-100
     border: '#E2E8F0', // slate-200
     borderLight: '#F1F5F9',
-    
+
     // Text
     textPrimary: '#0F172A', // slate-900
     textSecondary: '#475569', // slate-600

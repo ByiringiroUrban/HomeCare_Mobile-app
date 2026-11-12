@@ -11,7 +11,8 @@ import {
 import { useLocalSearchParams, router } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
-import { THEME } from '../../../constants/theme';
+import { THEME, getCountryConfig } from '../../../constants/theme';
+import { formatMoney, currencyOf } from '../../../utils/money';
 import { patientService } from '../../../services/api';
 import { Card } from '../../../components/ui/Card';
 import { Button } from '../../../components/ui/Button';
@@ -55,6 +56,9 @@ export default function DoctorDetailScreen() {
         </View>
         <Text style={styles.specialty}>{doctor.specialty}</Text>
         <Text style={styles.licenseText}>License: {doctor.licenseNumber}</Text>
+        <Text style={styles.licenseText}>
+          {getCountryConfig(doctor.country).flag} {doctor.city}, {getCountryConfig(doctor.country).name}
+        </Text>
 
         <View style={styles.ratingRow}>
           <Ionicons name="star" size={14} color="#F59E0B" />
@@ -69,12 +73,14 @@ export default function DoctorDetailScreen() {
       <Card style={styles.feeCard}>
         <View style={styles.feeCol}>
           <Text style={styles.feeLabel}>Home Consultation</Text>
-          <Text style={styles.feeVal}>{doctor.consultationFeeRwf.toLocaleString()} RWF</Text>
+          <Text style={styles.feeVal}>
+            {formatMoney(doctor.consultationFeeRwf, currencyOf(doctor))}
+          </Text>
         </View>
         <View style={styles.feeDivider} />
         <View style={styles.feeCol}>
-          <Text style={styles.feeLabel}>Kigali Travel Fee</Text>
-          <Text style={styles.feeVal}>{doctor.travelFeeRwf.toLocaleString()} RWF</Text>
+          <Text style={styles.feeLabel}>{doctor.city} Travel Fee</Text>
+          <Text style={styles.feeVal}>{formatMoney(doctor.travelFeeRwf, currencyOf(doctor))}</Text>
         </View>
       </Card>
 
@@ -144,7 +150,10 @@ export default function DoctorDetailScreen() {
       {/* Fixed Booking Action */}
       <View style={styles.actionContainer}>
         <Button
-          title={`Book Home Visit (${(doctor.consultationFeeRwf + doctor.travelFeeRwf).toLocaleString()} RWF)`}
+          title={`Book Home Visit (${formatMoney(
+            doctor.consultationFeeRwf + doctor.travelFeeRwf,
+            currencyOf(doctor)
+          )})`}
           size="lg"
           onPress={() => router.push(`/(patient)/book/${doctor.userId}` as any)}
         />

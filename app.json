@@ -13,9 +13,14 @@
       "backgroundColor": "#FFFFFF"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "HomeCare uses the camera for online video consultations with your doctor.",
+        "NSMicrophoneUsageDescription": "HomeCare uses the microphone so you can speak during online video consultations."
+      }
     },
     "android": {
+      "permissions": ["CAMERA", "RECORD_AUDIO", "MODIFY_AUDIO_SETTINGS"],
       "adaptiveIcon": {
         "backgroundColor": "#FFFFFF",
         "foregroundImage": "./assets/homecare-logo.png"

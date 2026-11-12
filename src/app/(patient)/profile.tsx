@@ -9,8 +9,10 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { THEME, APP_CONFIG } from '../../constants/theme';
+import { THEME, SupportedCountry, getCountryConfig } from '../../constants/theme';
 import { useAuthStore } from '../../stores/authStore';
+import { CountryChips } from '../../components/ui/CountryChips';
+import { useCountry, useLocaleStore } from '../../stores/localeStore';
 import { patientService } from '../../services/api';
 import { InputField } from '../../components/ui/InputField';
 import { Button } from '../../components/ui/Button';
@@ -18,13 +20,21 @@ import { Card } from '../../components/ui/Card';
 
 export default function PatientProfileScreen() {
   const { currentUser, patientProfile, logout, resetDemoData, refreshProfile } = useAuthStore();
+  const country = useCountry();
+  const setCountry = useLocaleStore((state) => state.setCountry);
 
   const [address, setAddress] = useState(patientProfile?.residenceAddress || '');
-  const [district, setDistrict] = useState(patientProfile?.district || 'Gasabo');
+  const [district, setDistrict] = useState(patientProfile?.district || country.districts[0]);
   const [allergies, setAllergies] = useState(patientProfile?.allergies.join(', ') || '');
   const [conditions, setConditions] = useState(patientProfile?.knownConditions.join(', ') || '');
   const [medications, setMedications] = useState(patientProfile?.currentMedication.join(', ') || '');
   const [saving, setSaving] = useState(false);
+
+  const handleCountryChange = (code: SupportedCountry) => {
+    setCountry(code);
+    const next = getCountryConfig(code);
+    setDistrict(next.districts[0]);
+  };
 
   const handleSaveProfile = async () => {
     if (!currentUser) return;
@@ -32,6 +42,8 @@ export default function PatientProfileScreen() {
     try {
       await patientService.updateProfile(currentUser.id, {
         residenceAddress: address,
+        country: country.code,
+        city: country.capitalCity,
         district,
         allergies: allergies.split(',').map((s) => s.trim()).filter(Boolean),
         knownConditions: conditions.split(',').map((s) => s.trim()).filter(Boolean),
@@ -48,7 +60,7 @@ export default function PatientProfileScreen() {
 
   const handleExportData = () => {
     alert(
-      'Exported Patient Health Record Archive (Encrypted JSON). Under Rwanda Data Protection Law, you may download your complete consultation history.'
+      `Exported Patient Health Record Archive (Encrypted JSON). Under ${country.dataProtectionLaw}, you may download your complete consultation history.`
     );
   };
 
@@ -77,16 +89,18 @@ export default function PatientProfileScreen() {
           These details are shared with attending specialists during home visits:
         </Text>
 
+        <CountryChips value={country.code} onChange={handleCountryChange} label="Country of Residence" />
+
         <InputField
-          label="Default Kigali Residence Address"
-          placeholder="KG 18 Ave, House 42, Kibagabaga"
+          label={`Default ${country.capitalCity} Residence Address`}
+          placeholder={address || 'Street, house number, neighbourhood'}
           value={address}
           onChangeText={setAddress}
         />
 
         <InputField
           label="District"
-          placeholder="Gasabo / Kicukiro / Nyarugenge"
+          placeholder={country.districts.slice(0, 3).join(' / ')}
           value={district}
           onChangeText={setDistrict}
         />
@@ -138,7 +152,8 @@ export default function PatientProfileScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Privacy & Health Data Rights</Text>
         <Text style={styles.legalNotice}>
-          In compliance with Rwandan Law No. 058/2021 on Personal Data Protection, your medical records are accessible only to you and authorized doctors with whom you have active or completed appointments.
+          In compliance with {country.dataProtectionLaw}, your medical records are accessible only to
+          you and authorized doctors with whom you have active or completed appointments.
         </Text>
 
         <View style={styles.dataButtons}>

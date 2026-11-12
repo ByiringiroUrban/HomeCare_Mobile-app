@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import { THEME } from '../../../constants/theme';
+import { THEME, getCountryConfig } from '../../../constants/theme';
 import { useAuthStore } from '../../../stores/authStore';
 import { patientService, doctorService } from '../../../services/api';
 import { mockDomainStore } from '../../../mock/mockDomainStore';
@@ -142,13 +142,15 @@ export default function DoctorConsultationWorkspaceScreen() {
       if (isLabRequired && sampleCollected) {
         const sample: LabSample = {
           id: `smp-${Date.now().toString().slice(-4)}`,
-          sampleCode: `SMP-KGL-${Math.floor(1000 + Math.random() * 9000)}`,
+          sampleCode: `SMP-${getCountryConfig(visit.country).code}-${Math.floor(1000 + Math.random() * 9000)}`,
           visitId: visit.id,
           patientId: visit.patientId,
           doctorId: currentUser.id,
           testNames: labTests.split(',').map((t) => t.trim()),
           collectionTime: new Date().toISOString(),
-          destinationLab: 'Kigali Central Biomedical Lab',
+          destinationLab: `${visit.district} Central Biomedical Laboratory`,
+          country: visit.country,
+          currency: visit.currency,
           status: 'collected',
           notes: 'Cold chain secured during transport.',
         };

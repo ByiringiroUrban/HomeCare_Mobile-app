@@ -97,7 +97,7 @@ export default function DoctorRequestsScreen() {
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.headerTitle}>Incoming Consultation Requests</Text>
       <Text style={styles.headerSubtitle}>
-        Review patient reported symptoms, location in Kigali, and confirm or propose rescheduling.
+        Review reported symptoms, visit location, and confirm or propose a new time.
       </Text>
 
       {pendingRequests.length === 0 ? (

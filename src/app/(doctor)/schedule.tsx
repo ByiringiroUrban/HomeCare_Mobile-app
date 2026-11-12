@@ -61,7 +61,7 @@ export default function DoctorScheduleScreen() {
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.headerTitle}>Availability & Slot Schedule</Text>
       <Text style={styles.headerSubtitle}>
-        Define your working windows in Kigali. Booked slots are automatically reserved.
+        Define your working windows. Booked slots are automatically reserved.
       </Text>
 
       {/* Routine Working Days & Hours */}

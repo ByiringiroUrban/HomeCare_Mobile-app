@@ -9,6 +9,7 @@ import {
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { THEME } from '../../constants/theme';
+import { formatMoney, currencyOf } from '../../utils/money';
 import { useAuthStore } from '../../stores/authStore';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
@@ -64,16 +65,18 @@ export default function DoctorProfileScreen() {
 
       {/* Coverage & Fees */}
       <Card style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>Service Rates & Kigali Districts</Text>
+        <Text style={styles.sectionTitle}>Service Rates & Coverage Districts</Text>
         <View style={styles.infoRow}>
           <Text style={styles.label}>Consultation Fee:</Text>
           <Text style={styles.value}>
-            {doctorProfile?.consultationFeeRwf.toLocaleString()} RWF
+            {formatMoney(doctorProfile?.consultationFeeRwf, currencyOf(doctorProfile))}
           </Text>
         </View>
         <View style={styles.infoRow}>
           <Text style={styles.label}>Travel Allowance:</Text>
-          <Text style={styles.value}>{doctorProfile?.travelFeeRwf.toLocaleString()} RWF</Text>
+          <Text style={styles.value}>
+            {formatMoney(doctorProfile?.travelFeeRwf, currencyOf(doctorProfile))}
+          </Text>
         </View>
         <View style={styles.infoRow}>
           <Text style={styles.label}>Coverage Districts:</Text>

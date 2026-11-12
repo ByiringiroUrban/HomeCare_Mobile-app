@@ -107,7 +107,7 @@ export default function ResultDetailScreen() {
             <Text style={styles.pdfHeadline}>CONFIDENTIAL MEDICAL REPORT</Text>
             <Text style={styles.pdfLine}>Patient ID: {result.patientId}</Text>
             <Text style={styles.pdfLine}>Collection Date: 2026-10-20 (Residence)</Text>
-            <Text style={styles.pdfLine}>Processed at: Kigali Central Biomedical Lab</Text>
+            <Text style={styles.pdfLine}>Processed at: Central Biomedical Reference Laboratory</Text>
             <View style={styles.pdfSeparator} />
             <Text style={styles.pdfLine}>Summary: {result.summaryFindings}</Text>
             <View style={styles.pdfSeparator} />

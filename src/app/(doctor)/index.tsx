@@ -108,7 +108,7 @@ export default function DoctorDashboardScreen() {
             </View>
             <Text style={styles.toggleSub}>
               {doctorProfile?.isOnline
-                ? 'Visible in Kigali specialist search'
+                ? `Visible in ${doctorProfile?.city || 'your city'} specialist search`
                 : 'Patients cannot book urgent visits'}
             </Text>
           </View>

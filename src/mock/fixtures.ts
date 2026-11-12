@@ -1,5 +1,5 @@
 // East Africa medical specialists, demo patients, visits, and clinical fixtures
-// Countries: Rwanda (RW), Kenya (KE), Tanzania (TZ)
+// Countries: Rwanda (RW), Kenya (KE), Tanzania (TZ), Uganda (UG), Burundi (BI), South Sudan (SS)
 import {
   User,
   PatientProfile,
@@ -24,52 +24,47 @@ export interface SpecialtyItem {
   doctorCount: number;
 }
 
-export const INITIAL_SPECIALTIES: SpecialtyItem[] = [
+// Counts are derived from the doctor catalog below so new markets stay accurate.
+const SPECIALTY_CATALOG: Omit<SpecialtyItem, 'doctorCount'>[] = [
   {
     id: 'general_medicine',
     name: 'General Medicine',
     description: 'Primary healthcare, routine adult checkups, chronic disease management',
     iconName: 'stethoscope',
-    doctorCount: 3,
   },
   {
     id: 'pediatrics',
     name: 'Pediatrics',
     description: 'Child health, neonatal checks, developmental assessments, childhood illnesses',
     iconName: 'baby',
-    doctorCount: 2,
   },
   {
     id: 'cardiology',
     name: 'Cardiology',
     description: 'Heart conditions, hypertension monitoring, ECG reviews, cardiovascular risk',
     iconName: 'heart-pulse',
-    doctorCount: 2,
   },
   {
     id: 'dermatology',
     name: 'Dermatology',
     description: 'Skin rash diagnosis, eczema, allergies, pediatric skin conditions',
     iconName: 'sparkles',
-    doctorCount: 1,
   },
   {
     id: 'gynecology',
     name: 'Obstetrics & Gynecology',
     description: 'Antenatal home monitoring, post-partum checkups, women health',
     iconName: 'shield-plus',
-    doctorCount: 1,
   },
   {
     id: 'geriatrics',
     name: 'Geriatric Medicine',
     description: 'Elderly care, mobility limitations, polypharmacy evaluation',
     iconName: 'user-check',
-    doctorCount: 1,
   },
 ];
 
-// Demo Users — representing all three East African countries
+// Demo Users — representing the East African markets
 export const DEMO_USERS: Record<string, User> = {
   patient1: {
     id: 'patient-101',
@@ -160,10 +155,34 @@ export const INITIAL_PATIENT_PROFILES: Record<string, PatientProfile> = {
     consentGiven: true,
     consentTimestamp: '2026-02-01T10:35:00Z',
   },
+  'patient-103': {
+    userId: 'patient-103',
+    age: 38,
+    gender: 'male',
+    residenceAddress: 'KK 314 St, Villa 12, Gikondo, Kigali',
+    country: 'RW',
+    city: 'Kigali',
+    district: 'Kicukiro',
+    coordinates: { latitude: -1.9755, longitude: 30.0811 },
+    emergencyContact: {
+      name: 'Claudine Mugisha (Spouse)',
+      relationship: 'Spouse',
+      phone: '+250 788 663 402',
+    },
+    allergies: ['No known allergies (NKDA)'],
+    knownConditions: [],
+    currentMedication: [],
+    consentGiven: true,
+    consentTimestamp: '2026-03-04T08:20:00Z',
+  },
 };
 
 // Fictional Doctors (Minimum 8 verified + 1 pending + 1 suspended for testing)
-export const INITIAL_DOCTORS: DoctorProfile[] = [
+// Seeds may omit market fields; they are derived below so every market is explicit.
+type DoctorSeed = Omit<DoctorProfile, 'country' | 'city' | 'currency'> &
+  Partial<Pick<DoctorProfile, 'country' | 'city' | 'currency'>>;
+
+const DOCTOR_SEED: DoctorSeed[] = [
   {
     userId: 'doctor-201',
     name: 'Dr. Eric Kayitare',
@@ -512,9 +531,194 @@ export const INITIAL_DOCTORS: DoctorProfile[] = [
     workingDays: [1, 2, 3, 4, 5],
     workingHours: { start: '09:00', end: '17:00' },
   },
+
+  // ── UGANDA ───────────────────────────────────────────────────────────────
+  {
+    userId: 'doctor-501',
+    name: 'Dr. Rebecca Namusoke',
+    email: 'dr.namusoke@homecare.ug',
+    phone: '+256 772 441 208',
+    avatarUrl: 'https://images.unsplash.com/photo-1594824813511-662589574549?auto=format&fit=crop&w=256&q=80',
+    specialty: 'General Medicine',
+    licenseNumber: 'UMDPC/2015/3320',
+    qualifications: ['MBChB (Makerere University)', 'Cert. Family Medicine (Mulago)'],
+    experienceYears: 10,
+    coverageDistricts: ['Kampala Central', 'Kololo', 'Nakawa'],
+    country: 'UG',
+    city: 'Kampala',
+    bio: 'General practitioner providing home consultations across Kampala, with a focus on malaria, typhoid, and hypertension follow-up.',
+    languages: ['English', 'Luganda', 'Swahili'],
+    consultationFeeRwf: 60000,
+    travelFeeRwf: 15000,
+    currency: 'UGX',
+    rating: 4.81,
+    reviewCount: 26,
+    verificationStatus: 'approved',
+    isOnline: true,
+    workingDays: [1, 2, 3, 4, 5, 6],
+    workingHours: { start: '08:00', end: '18:00' },
+  },
+  {
+    userId: 'doctor-502',
+    name: 'Dr. Daniel Okello',
+    email: 'dr.okello@homecare.ug',
+    phone: '+256 701 553 917',
+    avatarUrl: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=256&q=80',
+    specialty: 'Pediatrics',
+    licenseNumber: 'UMDPC/2016/4417',
+    qualifications: ['MBChB (Gulu University)', 'M.Med Paediatrics (Makerere)'],
+    experienceYears: 8,
+    coverageDistricts: ['Kampala Central', 'Nakawa', 'Gulu City'],
+    country: 'UG',
+    city: 'Kampala',
+    bio: 'Paediatrician offering home visits for children with respiratory infections, malnutrition follow-up, and routine growth monitoring.',
+    languages: ['English', 'Luganda'],
+    consultationFeeRwf: 55000,
+    travelFeeRwf: 12000,
+    currency: 'UGX',
+    rating: 4.88,
+    reviewCount: 21,
+    verificationStatus: 'approved',
+    isOnline: true,
+    workingDays: [1, 2, 3, 4, 5],
+    workingHours: { start: '09:00', end: '17:00' },
+  },
+
+  // ── BURUNDI ──────────────────────────────────────────────────────────────
+  {
+    userId: 'doctor-601',
+    name: 'Dr. Nadine Irakoze',
+    email: 'dr.irakoze@homecare.bi',
+    phone: '+257 79 445 118',
+    avatarUrl: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=256&q=80',
+    specialty: 'General Medicine',
+    licenseNumber: 'CNOMB/2015/2210',
+    qualifications: ['MD (Université du Burundi)', 'Cert. Médecine de Famille'],
+    experienceYears: 9,
+    coverageDistricts: ['Bujumbura Mairie', 'Rohero', 'Kinindo'],
+    country: 'BI',
+    city: 'Bujumbura',
+    bio: 'Médecin généraliste effectuant des visites à domicile à Bujumbura : paludisme, infections respiratoires et suivi des maladies chroniques.',
+    languages: ['Kirundi', 'French', 'Swahili'],
+    consultationFeeRwf: 45000,
+    travelFeeRwf: 10000,
+    currency: 'BIF',
+    rating: 4.76,
+    reviewCount: 18,
+    verificationStatus: 'approved',
+    isOnline: true,
+    workingDays: [1, 2, 3, 4, 5, 6],
+    workingHours: { start: '08:00', end: '18:00' },
+  },
+  {
+    userId: 'doctor-602',
+    name: 'Dr. Chantal Niyonkuru',
+    email: 'dr.niyonkuru@homecare.bi',
+    phone: '+257 79 220 664',
+    avatarUrl: 'https://images.unsplash.com/photo-1527613426441-4da17471b66d?auto=format&fit=crop&w=256&q=80',
+    specialty: 'Pediatrics',
+    licenseNumber: 'CNOMB/2017/3184',
+    qualifications: ['MD (Université du Burundi)', 'Spécialisation Pédiatrie (CHU Kamenge)'],
+    experienceYears: 7,
+    coverageDistricts: ['Bujumbura Mairie', 'Gitega'],
+    country: 'BI',
+    city: 'Bujumbura',
+    bio: 'Pédiatre proposant des consultations à domicile pour nourrissons et enfants, notamment les infections ORL et le suivi nutritionnel.',
+    languages: ['Kirundi', 'French'],
+    consultationFeeRwf: 50000,
+    travelFeeRwf: 10000,
+    currency: 'BIF',
+    rating: 4.86,
+    reviewCount: 14,
+    verificationStatus: 'approved',
+    isOnline: true,
+    workingDays: [1, 2, 3, 4, 5],
+    workingHours: { start: '09:00', end: '17:00' },
+  },
+
+  // ── SOUTH SUDAN ──────────────────────────────────────────────────────────
+  {
+    userId: 'doctor-701',
+    name: 'Dr. Ajak Deng',
+    email: 'dr.deng@homecare.ss',
+    phone: '+211 920 334 771',
+    avatarUrl: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=256&q=80',
+    specialty: 'General Medicine',
+    licenseNumber: 'SSMC/2016/1180',
+    qualifications: ['MBBS (University of Juba)', 'Cert. Tropical Medicine'],
+    experienceYears: 11,
+    coverageDistricts: ['Juba Central', 'Munuki', 'Jebel'],
+    country: 'SS',
+    city: 'Juba',
+    bio: 'General physician delivering home consultations in Juba, including malaria, typhoid, and respiratory infection management.',
+    languages: ['English', 'Juba Arabic'],
+    consultationFeeRwf: 15000,
+    travelFeeRwf: 3000,
+    currency: 'SSP',
+    rating: 4.72,
+    reviewCount: 12,
+    verificationStatus: 'approved',
+    isOnline: true,
+    workingDays: [1, 2, 3, 4, 5, 6],
+    workingHours: { start: '08:00', end: '18:00' },
+  },
+  {
+    userId: 'doctor-702',
+    name: 'Dr. Mary Kiden',
+    email: 'dr.kiden@homecare.ss',
+    phone: '+211 922 118 402',
+    avatarUrl: 'https://images.unsplash.com/photo-1582750433449-648ed127bb54?auto=format&fit=crop&w=256&q=80',
+    specialty: 'Obstetrics & Gynecology',
+    licenseNumber: 'SSMC/2014/0876',
+    qualifications: ['MBBS (Kampala International University)', 'M.Med OB/GYN (University of Juba)'],
+    experienceYears: 12,
+    coverageDistricts: ['Juba Central', 'Munuki'],
+    country: 'SS',
+    city: 'Juba',
+    bio: 'Obstetrician-gynecologist supporting antenatal checks, postnatal recovery, and newborn care at home in Juba.',
+    languages: ['English', 'Juba Arabic'],
+    consultationFeeRwf: 20000,
+    travelFeeRwf: 3500,
+    currency: 'SSP',
+    rating: 4.9,
+    reviewCount: 9,
+    verificationStatus: 'approved',
+    isOnline: true,
+    workingDays: [1, 2, 3, 5],
+    workingHours: { start: '09:00', end: '16:00' },
+  },
 ];
 
+export const INITIAL_DOCTORS: DoctorProfile[] = DOCTOR_SEED.map((doctor) => ({
+  ...doctor,
+  country: doctor.country ?? 'RW',
+  city: doctor.city ?? (doctor.country === 'KE' ? 'Nairobi' : 'Kigali'),
+  currency: doctor.currency ?? 'RWF',
+}));
+
+export const INITIAL_SPECIALTIES: SpecialtyItem[] = SPECIALTY_CATALOG.map((item) => ({
+  ...item,
+  doctorCount: INITIAL_DOCTORS.filter(
+    (d) => d.specialty === item.name && d.verificationStatus === 'approved'
+  ).length,
+}));
+
 // Initial Slots
+const buildMarketSlots = (): AvailabilitySlot[] => {
+  const doctorIds = [
+    'doctor-301', 'doctor-302', 'doctor-303',
+    'doctor-401', 'doctor-402',
+    'doctor-501', 'doctor-502',
+    'doctor-601', 'doctor-602',
+    'doctor-701', 'doctor-702',
+  ];
+  return doctorIds.flatMap((doctorId) => [
+    { id: `slot-${doctorId}-1`, doctorId, date: '2026-10-22', startTime: '09:00', endTime: '10:00', isBooked: false, isBlocked: false },
+    { id: `slot-${doctorId}-2`, doctorId, date: '2026-10-22', startTime: '14:00', endTime: '15:00', isBooked: false, isBlocked: false },
+    { id: `slot-${doctorId}-3`, doctorId, date: '2026-10-23', startTime: '11:00', endTime: '12:00', isBooked: false, isBlocked: false },
+  ]);
+};
+
 export const INITIAL_SLOTS: AvailabilitySlot[] = [
   // Today's and Tomorrow's slots for Dr. Eric (doctor-201)
   {
@@ -600,6 +804,7 @@ export const INITIAL_SLOTS: AvailabilitySlot[] = [
     isBooked: false,
     isBlocked: false,
   },
+  ...buildMarketSlots(),
 ];
 
 // Initial Visit Requests across diverse statuses
@@ -621,6 +826,8 @@ export const INITIAL_VISITS: VisitRequest[] = [
     commonSymptoms: ['Fever', 'Cough', 'Fatigue'],
     visitAddress: 'KG 18 Ave, House 42, Kibagabaga, Kigali',
     district: 'Gasabo',
+    country: 'RW',
+    currency: 'RWF',
     accessInstructions: 'Gate 42 black metallic door, opposite Kibagabaga Hospital back gate.',
     coordinates: { latitude: -1.9366, longitude: 30.1287 },
     consultationFeeRwf: 25000,
@@ -650,6 +857,8 @@ export const INITIAL_VISITS: VisitRequest[] = [
     commonSymptoms: ['Mild dizziness', 'Headache'],
     visitAddress: 'KG 18 Ave, House 42, Kibagabaga, Kigali',
     district: 'Gasabo',
+    country: 'RW',
+    currency: 'RWF',
     accessInstructions: 'Gate 42 black metallic door. Ring buzzer.',
     coordinates: { latitude: -1.9366, longitude: 30.1287 },
     consultationFeeRwf: 25000,
@@ -661,10 +870,10 @@ export const INITIAL_VISITS: VisitRequest[] = [
     updatedAt: '2026-10-21T13:40:00Z',
   },
 
-  // Visit 3: Pending request for Patient 2 with Dr. Aline (demonstrating doctor approval & alternative slot flow)
+  // Visit 3: Pending pediatric request in Kigali with Dr. Aline (doctor approval & alternative slot flow)
   {
     id: 'visit-903',
-    patientId: 'patient-102',
+    patientId: 'patient-103',
     patientName: 'Jean-Paul Mugisha',
     patientPhone: '+250 783 552 119',
     doctorId: 'doctor-202',
@@ -678,6 +887,8 @@ export const INITIAL_VISITS: VisitRequest[] = [
     commonSymptoms: ['Ear pain', 'Fever', 'Irritability'],
     visitAddress: 'KK 314 St, Villa 12, Gikondo, Kigali',
     district: 'Kicukiro',
+    country: 'RW',
+    currency: 'RWF',
     accessInstructions: 'Near Gikondo Catholic Parish, beige wall with green gate.',
     coordinates: { latitude: -1.9755, longitude: 30.0811 },
     consultationFeeRwf: 30000,
@@ -687,6 +898,36 @@ export const INITIAL_VISITS: VisitRequest[] = [
     paymentStatus: 'pending',
     createdAt: '2026-10-21T11:00:00Z',
     updatedAt: '2026-10-21T11:00:00Z',
+  },
+
+  // Visit 4: Pending Nairobi request for the Kenyan market (Patient 2 with Dr. Samuel Omondi)
+  {
+    id: 'visit-904',
+    patientId: 'patient-102',
+    patientName: 'James Ochieng',
+    patientPhone: '+254 712 441 800',
+    doctorId: 'doctor-301',
+    doctorName: 'Dr. Samuel Omondi',
+    doctorSpecialty: 'General Medicine',
+    slotId: 'slot-doctor-301-1',
+    scheduledDate: '2026-10-22',
+    scheduledTime: '09:00',
+    status: 'confirmed',
+    conditionDescription: 'Blood sugar readings have been high all week and I feel unusually thirsty and tired.',
+    commonSymptoms: ['Fatigue', 'Increased thirst', 'Frequent urination'],
+    visitAddress: 'Westlands, Nairobi',
+    district: 'Westlands',
+    country: 'KE',
+    currency: 'KES',
+    accessInstructions: 'Apartment 4B, Ring Road Westlands, ask reception for Ochieng.',
+    coordinates: { latitude: -1.2676, longitude: 36.8013 },
+    consultationFeeRwf: 3500,
+    travelFeeRwf: 500,
+    totalFeeRwf: 4000,
+    paymentMethod: 'card',
+    paymentStatus: 'completed',
+    createdAt: '2026-10-21T09:20:00Z',
+    updatedAt: '2026-10-21T09:35:00Z',
   },
 ];
 

@@ -16,6 +16,7 @@ import {
   VisitStatus,
 } from '../types/domain';
 import { SpecialtyItem, DEMO_USERS } from '../mock/fixtures';
+import { getCountryConfig } from '../constants/theme';
 import { mockDomainStore } from '../mock/mockDomainStore';
 
 const SIMULATED_LATENCY_MS = 250;
@@ -25,7 +26,15 @@ const delay = (ms = SIMULATED_LATENCY_MS) => new Promise((resolve) => setTimeout
 export interface AuthService {
   login(identifier: string, demoRole?: string): Promise<{ user: User; token: string }>;
   verifyOtp(code: string, userId: string): Promise<boolean>;
-  registerPatient(data: { name: string; email: string; phone: string; password: string }): Promise<User>;
+  registerPatient(data: {
+    name: string;
+    email: string;
+    phone: string;
+    password: string;
+    country?: string;
+    city?: string;
+    district?: string;
+  }): Promise<User>;
   registerDoctor(data: {
     name: string;
     email: string;
@@ -35,6 +44,7 @@ export interface AuthService {
     qualifications: string[];
     experienceYears: number;
     coverageDistricts: string[];
+    country?: string;
   }): Promise<User>;
   getCurrentUser(userId: string): Promise<User | null>;
   resetPassword(email: string): Promise<boolean>;
@@ -121,7 +131,18 @@ export const authService: AuthService = {
     return code === '123456' || code.length === 6;
   },
 
-  async registerPatient(data: { name: string; email: string; phone: string; password: string }) {
+  async registerPatient(data: {
+    name: string;
+    email: string;
+    phone: string;
+    password: string;
+    country?: string;
+    city?: string;
+    district?: string;
+  }) {
+    const market = getCountryConfig(data.country);
+    const city = data.city || market.capitalCity;
+    const district = data.district || market.districts[0];
     try {
       const res = await fetch(`${API_BASE_URL}/auth/register/patient`, {
         method: 'POST',
@@ -148,9 +169,10 @@ export const authService: AuthService = {
           userId: user.id,
           age: 30,
           gender: 'other',
-          residenceAddress: 'Kigali, Rwanda',
-          district: 'Gasabo',
-          sector: 'Remera',
+          residenceAddress: `${district}, ${city}`,
+          country: market.code,
+          city,
+          district,
           emergencyContact: { name: 'Next of kin', relationship: 'Family', phone: data.phone },
           allergies: [],
           knownConditions: [],
@@ -182,10 +204,15 @@ export const authService: AuthService = {
       userId,
       age: 30,
       gender: 'other',
-      residenceAddress: 'Kigali, Rwanda',
-      district: 'Gasabo',
-      sector: 'Remera',
-      emergencyContact: { name: 'Emergency Contact', relationship: 'Next of kin', phone: '+250 788 000 000' },
+      residenceAddress: `${district}, ${city}`,
+      country: market.code,
+      city,
+      district,
+      emergencyContact: {
+        name: 'Emergency Contact',
+        relationship: 'Next of kin',
+        phone: `${market.phonePrefix} 788 000 000`,
+      },
       allergies: [],
       knownConditions: [],
       currentMedication: [],
@@ -199,6 +226,7 @@ export const authService: AuthService = {
 
   async registerDoctor(data) {
     await delay(350);
+    const market = getCountryConfig(data.country);
     const userId = `doctor-${Date.now().toString().slice(-4)}`;
     const user: User = {
       id: userId,
@@ -218,10 +246,13 @@ export const authService: AuthService = {
       qualifications: data.qualifications,
       experienceYears: data.experienceYears,
       coverageDistricts: data.coverageDistricts,
-      bio: 'Board-registered specialist physician in Kigali.',
-      languages: ['English', 'Kinyarwanda'],
-      consultationFeeRwf: 25000,
-      travelFeeRwf: 5000,
+      country: market.code,
+      city: market.capitalCity,
+      currency: market.currency,
+      bio: `Board-registered specialist physician offering home visits in ${market.capitalCity}.`,
+      languages: market.languages.slice(0, 2),
+      consultationFeeRwf: market.baseTravelFee * 5,
+      travelFeeRwf: market.baseTravelFee,
       rating: 0,
       reviewCount: 0,
       verificationStatus: 'pending', // Doctors start pending until admin review
@@ -250,6 +281,7 @@ export interface PatientService {
   getSpecialties(): Promise<SpecialtyItem[]>;
   searchDoctors(params: {
     query?: string;
+    country?: string;
     specialty?: string;
     district?: string;
     language?: string;
@@ -299,6 +331,9 @@ export const patientService: PatientService = {
           d.specialty.toLowerCase().includes(q) ||
           d.bio.toLowerCase().includes(q)
       );
+    }
+    if (params.country && params.country !== 'All') {
+      docs = docs.filter((d) => d.country === params.country);
     }
     if (params.specialty && params.specialty !== 'All') {
       docs = docs.filter((d) => d.specialty.toLowerCase() === params.specialty!.toLowerCase());
@@ -596,6 +631,8 @@ export interface AdminService {
     completedVisits: number;
     activeVisits: number;
     grossRevenueRwf: number;
+    revenueByCurrency: Record<string, number>;
+    markets: number;
     avgRating: number;
     pendingVerifications: number;
   }>;
@@ -639,7 +676,12 @@ export const adminService: AdminService = {
 
     const completed = visits.filter((v) => v.status === 'completed');
     const active = visits.filter((v) => ['confirmed', 'on_the_way', 'arrived', 'in_consultation'].includes(v.status));
-    const grossRevenue = completed.reduce((sum, v) => sum + v.totalFeeRwf, 0);
+    const revenueByCurrency = completed.reduce<Record<string, number>>((acc, v) => {
+      const currency = v.currency || 'RWF';
+      acc[currency] = (acc[currency] || 0) + v.totalFeeRwf;
+      return acc;
+    }, {});
+    const grossRevenue = revenueByCurrency.RWF || 0;
 
     const approvedDocs = doctors.filter((d) => d.verificationStatus === 'approved');
     const avgRating =
@@ -652,6 +694,8 @@ export const adminService: AdminService = {
       completedVisits: completed.length,
       activeVisits: active.length,
       grossRevenueRwf: grossRevenue,
+      revenueByCurrency,
+      markets: new Set(doctors.map((d) => d.country)).size,
       avgRating: parseFloat(avgRating.toFixed(2)),
       pendingVerifications,
     };

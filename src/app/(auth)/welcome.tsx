@@ -36,7 +36,7 @@ export default function WelcomeScreen() {
         <View style={styles.heroSection}>
           <Text style={styles.heroHeadline}>Quality Healthcare Delivered to Your Home</Text>
           <Text style={styles.heroSubheadline}>
-            Connect with certified doctors across Kigali for convenient in-person medical consultations and lab collections.
+            Connect with certified doctors across Rwanda, Kenya, Uganda, Tanzania, Burundi and South Sudan for in-person home consultations and lab collections.
           </Text>
         </View>
 

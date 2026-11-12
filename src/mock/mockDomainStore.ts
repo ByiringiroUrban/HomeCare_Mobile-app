@@ -15,6 +15,7 @@ import {
   VisitStatus,
   SampleStatus,
 } from '../types/domain';
+import { ALL_DISTRICTS, COUNTRY_CODES, COUNTRY_CONFIGS } from '../constants/theme';
 import {
   DEMO_USERS,
   INITIAL_PATIENT_PROFILES,
@@ -47,22 +48,18 @@ class MockDomainStore {
   private auditLogs: MedicalAuditLog[] = [];
   private specialties: SpecialtyItem[] = [];
 
-  // System Config — East Africa multi-country
+  // System Config — East Africa multi-country (derived from the country registry)
   public platformConfig = {
     // Emergency numbers by country
-    emergencyPhones: { RW: '912', KE: '999', TZ: '114' },
-    emergencyPhone: '912', // Rwanda default
+    emergencyPhones: COUNTRY_CODES.reduce<Record<string, string>>((acc, code) => {
+      acc[code] = COUNTRY_CONFIGS[code].emergencyPhone;
+      return acc;
+    }, {}),
+    emergencyPhone: COUNTRY_CONFIGS.RW.emergencyPhone, // platform default market
     cancellationWindowHours: 2,
-    baseTravelFeeRwf: 5000,
-    // Coverage cities across East Africa
-    coverageDistricts: [
-      // Rwanda
-      'Gasabo', 'Kicukiro', 'Nyarugenge',
-      // Kenya
-      'Nairobi CBD', 'Westlands', 'Kilimani', 'Mombasa Island',
-      // Tanzania
-      'Kinondoni', 'Ilala', 'Temeke', 'Arusha City',
-    ],
+    baseTravelFeeRwf: COUNTRY_CONFIGS.RW.baseTravelFee,
+    // Coverage districts across every market
+    coverageDistricts: ALL_DISTRICTS,
   };
 
   constructor() {

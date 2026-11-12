@@ -2,10 +2,13 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable, Linking } from 'react-native';
 import { THEME, APP_CONFIG } from '../../constants/theme';
+import { useCountry } from '../../stores/localeStore';
 
 export const EmergencyBanner: React.FC = () => {
+  const country = useCountry();
+
   const handleCallEmergency = () => {
-    Linking.openURL(`tel:${APP_CONFIG.emergencyPhone}`);
+    Linking.openURL(`tel:${country.emergencyPhone}`);
   };
 
   return (
@@ -14,10 +17,13 @@ export const EmergencyBanner: React.FC = () => {
         <View style={styles.badge}>
           <Text style={styles.badgeText}>EMERGENCY NOTICE</Text>
         </View>
-        <Text style={styles.description}>{APP_CONFIG.emergencyDisclaimer}</Text>
+        <Text style={styles.description}>
+          {APP_CONFIG.emergencyDisclaimer} In {country.name}, dial {country.emergencyPhone} (
+          {country.emergencyService}).
+        </Text>
       </View>
       <Pressable onPress={handleCallEmergency} style={styles.callButton}>
-        <Text style={styles.callButtonText}>CALL 112</Text>
+        <Text style={styles.callButtonText}>CALL {country.emergencyPhone}</Text>
       </Pressable>
     </View>
   );

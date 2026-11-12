@@ -8,23 +8,34 @@ import {
   Pressable,
 } from 'react-native';
 import { router } from 'expo-router';
-import { THEME, APP_CONFIG } from '../../constants/theme';
+import { THEME, SupportedCountry, getCountryConfig } from '../../constants/theme';
 import { authService } from '../../services/api';
+import { CountryChips } from '../../components/ui/CountryChips';
+import { useCountry, useLocaleStore } from '../../stores/localeStore';
 import { InputField } from '../../components/ui/InputField';
 import { Button } from '../../components/ui/Button';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function RegisterDoctorScreen() {
+  const country = useCountry();
+  const setCountry = useLocaleStore((state) => state.setCountry);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('+250 78');
+  const [phone, setPhone] = useState(country.phonePrefix);
   const [specialty, setSpecialty] = useState('General Medicine');
   const [licenseNumber, setLicenseNumber] = useState('');
   const [qualifications, setQualifications] = useState('');
   const [experienceYears, setExperienceYears] = useState('5');
-  const [selectedDistricts, setSelectedDistricts] = useState<string[]>(['Gasabo']);
+  const [selectedDistricts, setSelectedDistricts] = useState<string[]>([country.districts[0]]);
   const [errorMsg, setErrorMsg] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const handleCountryChange = (code: SupportedCountry) => {
+    setCountry(code);
+    const next = getCountryConfig(code);
+    setSelectedDistricts([next.districts[0]]);
+    if (!phone.trim() || phone.trim().length <= 6) setPhone(next.phonePrefix);
+  };
 
   const toggleDistrict = (district: string) => {
     if (selectedDistricts.includes(district)) {
@@ -36,8 +47,10 @@ export default function RegisterDoctorScreen() {
 
   const handleRegister = async () => {
     if (!name.trim()) return setErrorMsg('Doctor full name is required.');
-    if (!licenseNumber.trim()) return setErrorMsg('Rwanda Medical and Dental Council license number is required.');
-    if (selectedDistricts.length === 0) return setErrorMsg('Please choose at least one Kigali coverage district.');
+    if (!licenseNumber.trim())
+      return setErrorMsg(`${country.regulatoryBody} license number is required.`);
+    if (selectedDistricts.length === 0)
+      return setErrorMsg(`Please choose at least one ${country.name} coverage district.`);
 
     setErrorMsg('');
     setLoading(true);
@@ -51,6 +64,7 @@ export default function RegisterDoctorScreen() {
         qualifications: qualifications.split(',').map((q) => q.trim()).filter(Boolean),
         experienceYears: parseInt(experienceYears, 10) || 1,
         coverageDistricts: selectedDistricts,
+        country: country.code,
       });
 
       router.push({
@@ -69,9 +83,12 @@ export default function RegisterDoctorScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>Join as Specialist Doctor</Text>
         <Text style={styles.subtitle}>
-          Provide residential medical consultations in Kigali. Professional credentials are authenticated before public listing.
+          Provide residential medical consultations in {country.capitalCity} and across{' '}
+          {country.name}. Professional credentials are authenticated before public listing.
         </Text>
       </View>
+
+      <CountryChips value={country.code} onChange={handleCountryChange} label="Country of Practice" />
 
       {errorMsg ? (
         <View style={styles.errorBox}>
@@ -94,8 +111,8 @@ export default function RegisterDoctorScreen() {
       />
 
       <InputField
-        label="Rwanda Medical Council (RMDC) License No."
-        placeholder="e.g. RMC/2018/0412"
+        label={`${country.regulatorShort} License No.`}
+        placeholder={`e.g. ${country.licenseExample}`}
         value={licenseNumber}
         onChangeText={setLicenseNumber}
       />
@@ -117,7 +134,7 @@ export default function RegisterDoctorScreen() {
 
       <InputField
         label="Contact Phone"
-        placeholder="+250 788 000 000"
+        placeholder={country.phonePlaceholder}
         value={phone}
         onChangeText={setPhone}
         keyboardType="phone-pad"
@@ -125,7 +142,7 @@ export default function RegisterDoctorScreen() {
 
       <InputField
         label="Work Email"
-        placeholder="doctor@example.rw"
+        placeholder={`doctor@example.${country.code.toLowerCase()}`}
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
@@ -134,9 +151,9 @@ export default function RegisterDoctorScreen() {
 
       {/* Coverage Districts */}
       <View style={styles.districtSection}>
-        <Text style={styles.sectionLabel}>Kigali Coverage Districts</Text>
+        <Text style={styles.sectionLabel}>{country.name} Coverage Districts</Text>
         <View style={styles.districtChips}>
-          {APP_CONFIG.coverageDistricts.map((d) => {
+          {country.districts.map((d) => {
             const isSelected = selectedDistricts.includes(d);
             return (
               <Pressable

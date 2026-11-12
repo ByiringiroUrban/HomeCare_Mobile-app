@@ -3,8 +3,8 @@ import { View, Text, StyleSheet, Image, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { THEME } from '../../constants/theme';
 import { DoctorProfile } from '../../types/domain';
+import { formatMoney, currencyOf } from '../../utils/money';
 import { Card } from './Card';
-import { Badge } from './Badge';
 
 interface DoctorCardProps {
   doctor: DoctorProfile;
@@ -42,7 +42,9 @@ export const DoctorCard: React.FC<DoctorCardProps> = ({
               />
             )}
           </View>
-          <Text style={styles.specialty}>{doctor.specialty}</Text>
+          <Text style={styles.specialty} numberOfLines={1}>
+            {doctor.specialty} • {doctor.city}
+          </Text>
           <View style={styles.metricsRow}>
             <Ionicons name="star" size={13} color="#D97706" style={{ marginRight: 2 }} />
             <Text style={styles.ratingText}>{doctor.rating.toFixed(1)}</Text>
@@ -70,7 +72,7 @@ export const DoctorCard: React.FC<DoctorCardProps> = ({
         <View>
           <Text style={styles.feeLabel}>Home Consultation</Text>
           <Text style={styles.feeAmount}>
-            {doctor.consultationFeeRwf.toLocaleString()} RWF
+            {formatMoney(doctor.consultationFeeRwf, currencyOf(doctor))}
           </Text>
         </View>
 

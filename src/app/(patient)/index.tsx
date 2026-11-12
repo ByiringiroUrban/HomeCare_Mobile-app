@@ -1,5 +1,5 @@
 // Patient Home Screen (SRS Section 5 - Home)
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -18,10 +18,21 @@ import { useAuthStore } from '../../stores/authStore';
 import { patientService } from '../../services/api';
 import { DoctorCard } from '../../components/ui/DoctorCard';
 import { VisitCard } from '../../components/ui/VisitCard';
+import { CountryChips } from '../../components/ui/CountryChips';
+import { useCountry, useLocaleStore } from '../../stores/localeStore';
 
 export default function PatientHomeScreen() {
   const { currentUser, patientProfile } = useAuthStore();
   const [refreshing, setRefreshing] = useState(false);
+  const country = useCountry();
+  const { setCountry } = useLocaleStore();
+
+  // Follow the signed-in patient's home market
+  useEffect(() => {
+    if (patientProfile?.country) {
+      useLocaleStore.getState().syncFromProfile(patientProfile.country);
+    }
+  }, [patientProfile?.country]);
 
   // Active / Upcoming visits query
   const { data: visits = [], refetch: refetchVisits } = useQuery({
@@ -36,10 +47,10 @@ export default function PatientHomeScreen() {
     queryFn: () => patientService.getSpecialties(),
   });
 
-  // Recommended Specialists
+  // Recommended Specialists in the selected market
   const { data: doctors = [], refetch: refetchDoctors } = useQuery({
-    queryKey: ['recommended-doctors'],
-    queryFn: () => patientService.searchDoctors({ minRating: 4.8 }),
+    queryKey: ['recommended-doctors', country.code],
+    queryFn: () => patientService.searchDoctors({ country: country.code, minRating: 4.7 }),
   });
 
   const onRefresh = async () => {
@@ -82,11 +93,21 @@ export default function PatientHomeScreen() {
             <View style={styles.locationRow}>
               <Ionicons name="location-sharp" size={13} color={THEME.colors.primary} style={{ marginRight: 3 }} />
               <Text style={styles.locationText} numberOfLines={1}>
-                {patientProfile?.district ? `${patientProfile.district}, Kigali` : 'Kigali, Rwanda'}
+                {patientProfile?.district
+                  ? `${patientProfile.district}, ${patientProfile.city || country.capitalCity}`
+                  : `${country.capitalCity}, ${country.name}`}
               </Text>
             </View>
           </View>
         </View>
+
+        {/* East African market selector */}
+        <CountryChips
+          value={country.code}
+          onChange={setCountry}
+          label="Care market"
+          style={styles.marketPicker}
+        />
 
         {/* Quick Search & Discovery Action Bar */}
         <View style={styles.searchBarContainer}>
@@ -171,7 +192,8 @@ export default function PatientHomeScreen() {
         <View style={styles.emergencyFooter}>
           <Ionicons name="information-circle-outline" size={14} color={THEME.colors.textMuted} />
           <Text style={styles.emergencyFooterText}>
-            Medical Emergency in Rwanda? Call SAMU Helpline <Text style={styles.emergencyNumber}>112</Text>
+            Medical emergency in {country.name}? Call {country.emergencyService} on{' '}
+            <Text style={styles.emergencyNumber}>{country.emergencyPhone}</Text>
           </Text>
         </View>
       </ScrollView>
@@ -186,6 +208,10 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: THEME.spacing.xxl,
+  },
+  marketPicker: {
+    paddingHorizontal: THEME.spacing.base,
+    marginTop: THEME.spacing.xs,
   },
   brandRow: {
     flexDirection: 'row',

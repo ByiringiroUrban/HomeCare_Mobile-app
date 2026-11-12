@@ -1,5 +1,6 @@
 // Domain Entities for HomeCare Mobile & Web Application
-// Supports East African markets: Rwanda (RWF), Kenya (KES), Tanzania (TZS)
+// Supports East African markets: Rwanda (RWF), Kenya (KES), Tanzania (TZS),
+// Uganda (UGX), Burundi (BIF) and South Sudan (SSP)
 // Sourced from SRS Version 1.0 Draft
 
 export type UserRole = 'patient' | 'doctor' | 'admin';
@@ -42,7 +43,7 @@ export interface PatientProfile {
   gender: 'male' | 'female' | 'other';
   residenceAddress: string;
   city: string;
-  country: string;          // ISO 2-letter: 'RW' | 'KE' | 'TZ'
+  country: string;          // ISO 2-letter: 'RW' | 'KE' | 'TZ' | 'UG' | 'BI' | 'SS'
   district: string;
   sector?: string;
   coordinates?: { latitude: number; longitude: number };
@@ -70,12 +71,12 @@ export interface DoctorProfile {
   experienceYears: number;
   coverageDistricts: string[];
   city: string;
-  country: string;          // ISO 2-letter: 'RW' | 'KE' | 'TZ'
+  country: string;          // ISO 2-letter: 'RW' | 'KE' | 'TZ' | 'UG' | 'BI' | 'SS'
   bio: string;
   languages: string[];
   consultationFeeRwf: number;   // stored in local currency units
   travelFeeRwf: number;
-  currency: string;             // 'RWF' | 'KES' | 'TZS'
+  currency: string;             // 'RWF' | 'KES' | 'TZS' | 'UGX' | 'BIF' | 'SSP'
   rating: number;
   reviewCount: number;
   verificationStatus: DoctorVerificationStatus;
@@ -114,6 +115,8 @@ export interface VisitRequest {
   attachmentUrls?: string[];
   visitAddress: string;
   district: string;
+  country: string;         // market of the visit (ISO 2-letter)
+  currency: string;        // currency of all fees on this visit
   accessInstructions?: string; // gate code, landmark
   coordinates?: { latitude: number; longitude: number };
   consultationFeeRwf: number;
@@ -148,6 +151,8 @@ export interface LabSample {
   destinationLab: string;
   status: SampleStatus;
   notes?: string;
+  country?: string;   // market where the sample was collected
+  currency?: string;  // currency of any laboratory charges
 }
 
 export interface ResultDocument {

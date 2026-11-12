@@ -61,20 +61,23 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>
         <StatusBar style="dark" />
-        <View style={styles.container}>
-          <SessionBar />
-          <Stack
-            screenOptions={{
-              headerShown: false,
-              contentStyle: { backgroundColor: THEME.colors.background },
-            }}
-          >
-            <Stack.Screen name="index" />
-            <Stack.Screen name="(auth)" />
-            <Stack.Screen name="(patient)" />
-            <Stack.Screen name="(doctor)" />
-            <Stack.Screen name="(admin)" />
-          </Stack>
+        <View style={styles.shell}>
+          <View style={styles.container}>
+            <SessionBar />
+            <Stack
+              screenOptions={{
+                headerShown: false,
+                contentStyle: { backgroundColor: THEME.colors.background },
+              }}
+            >
+              <Stack.Screen name="index" />
+              <Stack.Screen name="(auth)" />
+              <Stack.Screen name="(patient)" />
+              <Stack.Screen name="(doctor)" />
+              <Stack.Screen name="(admin)" />
+              <Stack.Screen name="meeting/[visitId]" options={{ headerShown: false, animation: 'fade' }} />
+            </Stack>
+          </View>
         </View>
 
         {/* Animated HomeCare Brand Splash Preloader */}
@@ -85,8 +88,17 @@ export default function RootLayout() {
 }
 
 const styles = StyleSheet.create({
+  // Phones use the full screen; tablets and desktop browsers get a centred column
+  // instead of stretching the mobile layout edge to edge.
+  shell: {
+    flex: 1,
+    alignItems: 'center',
+    backgroundColor: THEME.colors.border,
+  },
   container: {
     flex: 1,
+    width: '100%',
+    maxWidth: 720,
     backgroundColor: THEME.colors.background,
   },
   demoBar: {

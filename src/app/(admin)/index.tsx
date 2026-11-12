@@ -15,7 +15,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
 import type { ComponentProps } from 'react';
-import { THEME } from '../../constants/theme';
+import { THEME, COUNTRY_LIST } from '../../constants/theme';
+import { formatMoney } from '../../utils/money';
 import { useAuthStore } from '../../stores/authStore';
 import { adminService } from '../../services/api';
 import { mockDomainStore } from '../../mock/mockDomainStore';
@@ -169,7 +170,7 @@ export default function AdminConsoleScreen() {
           <Text style={styles.greeting}>Platform Admin</Text>
           <View style={styles.locationRow}>
             <Ionicons name="location-sharp" size={13} color={THEME.colors.primary} style={{ marginRight: 3 }} />
-            <Text style={styles.locationText}>Kigali Healthcare Network</Text>
+            <Text style={styles.locationText}>East Africa Healthcare Network</Text>
           </View>
         </View>
 
@@ -363,8 +364,14 @@ export default function AdminConsoleScreen() {
 
               <View style={styles.metricCard}>
                 <IconWell name="wallet-outline" />
-                <Text style={styles.metricVal}>{(metrics?.grossRevenueRwf || 0).toLocaleString()}</Text>
-                <Text style={styles.metricLbl}>Gross Fees (RWF)</Text>
+                <Text style={styles.metricVal} numberOfLines={2}>
+                  {Object.keys(metrics?.revenueByCurrency || {}).length === 0
+                    ? '0 RWF'
+                    : Object.entries(metrics?.revenueByCurrency || {})
+                        .map(([currency, amount]) => formatMoney(amount, currency))
+                        .join(' · ')}
+                </Text>
+                <Text style={styles.metricLbl}>Fees Collected per Market</Text>
               </View>
 
               <View style={styles.metricCard}>
@@ -394,7 +401,7 @@ export default function AdminConsoleScreen() {
                 <IconWell name="settings-outline" size={40} iconSize={20} />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.configTitle}>Platform Configuration</Text>
-                  <Text style={styles.configSub}>Standard parameters for Kigali dispatch</Text>
+                  <Text style={styles.configSub}>Standard parameters for East Africa dispatch</Text>
                 </View>
               </View>
 
@@ -402,9 +409,9 @@ export default function AdminConsoleScreen() {
 
               <View style={styles.configItemRow}>
                 <IconWell name="location-sharp" size={28} iconSize={14} />
-                <Text style={styles.configLabel}>Coverage</Text>
+                <Text style={styles.configLabel}>Markets</Text>
                 <Text style={styles.configValue}>
-                  {mockDomainStore.platformConfig.coverageDistricts.join(', ')}
+                  {mockDomainStore.platformConfig.coverageDistricts.length} coverage districts in 6 countries
                 </Text>
               </View>
 
@@ -412,7 +419,7 @@ export default function AdminConsoleScreen() {
                 <IconWell name="car-outline" size={28} iconSize={14} />
                 <Text style={styles.configLabel}>Travel Fee</Text>
                 <Text style={styles.configValue}>
-                  {mockDomainStore.platformConfig.baseTravelFeeRwf.toLocaleString()} RWF
+                  {formatMoney(mockDomainStore.platformConfig.baseTravelFeeRwf, 'RWF')} Rwanda baseline
                 </Text>
               </View>
 
@@ -426,14 +433,18 @@ export default function AdminConsoleScreen() {
                 />
                 <Text style={styles.configLabel}>Emergency</Text>
                 <Text style={[styles.configValue, { color: THEME.colors.error }]}>
-                  {mockDomainStore.platformConfig.emergencyPhone} SAMU
+                  {Object.entries(mockDomainStore.platformConfig.emergencyPhones)
+                    .map(([code, phone]) => `${code} ${phone}`)
+                    .join(' · ')}
                 </Text>
               </View>
 
               <View style={styles.configItemRow}>
                 <IconWell name="shield-checkmark-outline" size={28} iconSize={14} />
-                <Text style={styles.configLabel}>Authority</Text>
-                <Text style={styles.configValue}>RMDC · Law No. 058/2021</Text>
+                <Text style={styles.configLabel}>Authorities</Text>
+                <Text style={styles.configValue}>
+                  {COUNTRY_LIST.map((c) => c.regulatorShort).join(' · ')}
+                </Text>
               </View>
             </Card>
           </View>
@@ -547,7 +558,8 @@ export default function AdminConsoleScreen() {
                     <View style={styles.docDetailRow}>
                       <Ionicons name="pricetag-outline" size={14} color={THEME.colors.textMuted} />
                       <Text style={styles.docDetailText}>
-                        {(d.consultationFeeRwf || 25000).toLocaleString()} RWF + {d.travelFeeRwf || 5000} RWF travel
+                        {formatMoney(d.consultationFeeRwf, d.currency)} +{' '}
+                        {formatMoney(d.travelFeeRwf, d.currency)} travel
                       </Text>
                     </View>
                   </View>
@@ -737,8 +749,8 @@ export default function AdminConsoleScreen() {
         <View style={styles.emergencyFooter}>
           <Ionicons name="information-circle-outline" size={14} color={THEME.colors.textMuted} />
           <Text style={styles.emergencyFooterText}>
-            Medical Emergency in Rwanda? Call SAMU Helpline{' '}
-            <Text style={styles.emergencyNumber}>112</Text>
+            Medical emergency? Call your national number:{' '}
+            <Text style={styles.emergencyNumber}>112 (RW/TZ) · 999 (KE/UG/SS) · 117 (BI)</Text>
           </Text>
         </View>
 

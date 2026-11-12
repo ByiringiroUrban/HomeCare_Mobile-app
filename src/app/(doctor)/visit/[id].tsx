@@ -64,7 +64,7 @@ export default function DoctorVisitCockpitScreen() {
       ios: `maps:0,0?q=${encodeURIComponent(visit.visitAddress)}@${query}`,
       android: `geo:0,0?q=${query}(${encodeURIComponent(visit.visitAddress)})`,
       default: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-        visit.visitAddress + ' Kigali'
+        `${visit.visitAddress}, ${visit.district}`
       )}`,
     });
     Linking.openURL(url as string);
@@ -85,11 +85,21 @@ export default function DoctorVisitCockpitScreen() {
             Scheduled: {visit.scheduledDate} at {visit.scheduledTime}
           </Text>
         </View>
+
+        {['confirmed', 'on_the_way', 'arrived', 'in_consultation'].includes(visit.status) && (
+          <Button
+            title="Start Online Video Consultation"
+            variant="secondary"
+            icon={<Ionicons name="videocam" size={16} color={THEME.colors.accent} />}
+            onPress={() => router.push(`/meeting/${visit.id}` as any)}
+            style={{ marginTop: 12 }}
+          />
+        )}
       </View>
 
       {/* Navigation & Patient Residence Card */}
       <Card style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>Residence Destination (Kigali)</Text>
+        <Text style={styles.sectionTitle}>Residence Destination ({visit.district})</Text>
         <View style={styles.addressRow}>
           <Ionicons name="location-outline" size={18} color={THEME.colors.primary} style={{ marginRight: 6 }} />
           <Text style={styles.addressText}>{visit.visitAddress}</Text>

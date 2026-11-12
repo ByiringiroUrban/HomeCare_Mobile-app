@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { THEME } from '../../constants/theme';
 import { VisitRequest } from '../../types/domain';
+import { formatMoney } from '../../utils/money';
 import { Card } from './Card';
 import { Badge } from './Badge';
 
@@ -60,14 +61,15 @@ export const VisitCard: React.FC<VisitCardProps> = ({
             Proposed Time: {visit.alternativeDate} at {visit.alternativeTime}
           </Text>
           {visit.alternativeProposalNote && (
-            <Text style={styles.alternativeNote}>"{visit.alternativeProposalNote}"</Text>
+            <Text style={styles.alternativeNote}>&ldquo;{visit.alternativeProposalNote}&rdquo;</Text>
           )}
         </View>
       )}
 
       <View style={styles.footer}>
         <Text style={styles.feeText}>
-          Total: <Text style={styles.feeHighlight}>{visit.totalFeeRwf.toLocaleString()} RWF</Text>
+          Total:{' '}
+          <Text style={styles.feeHighlight}>{formatMoney(visit.totalFeeRwf, visit.currency)}</Text>
         </Text>
 
         {actionLabel && onActionPress ? (

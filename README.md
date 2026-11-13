@@ -4,7 +4,7 @@
 ### 1. Project Overview & Architecture
 **HomeCare** is a mobile-first digital healthcare frontend built for residential medical consultations in Rwanda (default location: Kigali, prices in RWF). The application allows patients to find verified specialists, book home visits, track visit progression, view clinical summaries, and access downloadable lab results. Specialists can manage working hours and availability slots, review and accept/decline/propose alternative booking slots, execute visits via a step-by-step cockpit, and publish diagnostic records, electronic prescriptions (Rx), and lab specimen results.
 
-The frontend is built on **Expo (SDK 58)** with **React Native**, **Expo Router**, **TypeScript**, **Zustand**, and **TanStack React Query**, backed by a state-machine mock repository with Kigali demonstration fixtures and strict account isolation. The backend is implemented with **Python (FastAPI)** and **PostgreSQL (Neon Serverless)** with async SQLAlchemy.
+The frontend is built on **Expo (SDK 58)** with **React Native**, **Expo Router**, **TypeScript**, **Zustand**, and **TanStack React Query**, backed by a state-machine mock repository with Kigali demonstration fixtures and strict account isolation. The backend is implemented with **Python (FastAPI)** and **PostgreSQL (Neon Serverless)** with async SQLAlchemy. 
 
 ---
 

@@ -23,8 +23,25 @@ class Settings(BaseSettings):
     # One-time codes (account verification & password reset)
     OTP_EXPIRE_MINUTES: int = 10
     OTP_MAX_ATTEMPTS: int = 5
-    # Until an SMS/email provider is configured, codes are written to the server log
-    OTP_LOG_TO_CONSOLE: bool = True
+    # Also print codes to the server log (development only; codes go out by email)
+    OTP_LOG_TO_CONSOLE: bool = False
+
+    # SMTP delivery for one-time codes
+    SMTP_HOST: str = "smtp.gmail.com"
+    SMTP_PORT: int = 587
+    SMTP_STARTTLS: bool = True
+    SMTP_USER: Optional[str] = None
+    SMTP_PASS: Optional[str] = None
+    SMTP_FROM: Optional[str] = None
+
+    # Cloudinary (profile photos and clinical attachments)
+    CLOUDINARY_CLOUD_NAME: Optional[str] = None
+    CLOUDINARY_API_KEY: Optional[str] = None
+    CLOUDINARY_API_SECRET: Optional[str] = None
+
+    @property
+    def smtp_configured(self) -> bool:
+        return bool(self.SMTP_HOST and self.SMTP_USER and self.SMTP_PASS)
 
     # Initial administrator, created automatically at startup when no admin exists
     ADMIN_NAME: Optional[str] = None

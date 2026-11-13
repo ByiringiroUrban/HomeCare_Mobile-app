@@ -1,3 +1,5 @@
+import re
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -5,6 +7,7 @@ from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 
 from app.api.deps import get_current_user
+from app.core.config import settings
 from app.core.security import create_access_token, get_password_hash, verify_password
 from app.db.session import get_db
 from app.models.domain import Specialty
@@ -20,7 +23,7 @@ from app.schemas.requests import (
     ResetPasswordRequest,
 )
 from app.services.domain_ops import notify
-from app.services.otp import consume_otp, issue_otp
+from app.services.otp import consume_otp, issue_otp, mask_email
 from app.services.serializers import user_out
 
 router = APIRouter()
@@ -95,8 +98,13 @@ async def register_patient(payload: PatientRegisterRequest, db: AsyncSession = D
         )
     )
     await db.commit()
-    await issue_otp(db, user, "verify")
-    return {"user": user_out(user), "requiresVerification": True}
+    email_sent = await issue_otp(db, user, "verify")
+    return {
+        "user": user_out(user),
+        "requiresVerification": True,
+        "emailSent": email_sent,
+        "destination": mask_email(user.email),
+    }
 
 
 @router.post("/register/doctor", status_code=status.HTTP_201_CREATED)
@@ -118,7 +126,15 @@ async def register_doctor(payload: DoctorRegisterRequest, db: AsyncSession = Dep
         )
     ).scalars().first()
     if not specialty:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Unknown specialty.")
+        # Doctors type their specialty freely on sign-up, so register a new one
+        # instead of refusing the account.
+        specialty_name = payload.specialty.strip()
+        if not specialty_name:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Unknown specialty.")
+        slug = re.sub(r"[^a-z0-9]+", "_", specialty_name.lower()).strip("_") or "general_medicine"
+        specialty = Specialty(id=slug, name=specialty_name, description="", icon_name="stethoscope")
+        db.add(specialty)
+        await db.flush()
 
     user = User(
         name=payload.name.strip(),
@@ -159,8 +175,13 @@ async def register_doctor(payload: DoctorRegisterRequest, db: AsyncSession = Dep
             reference_id=user.id,
         )
     await db.commit()
-    await issue_otp(db, user, "verify")
-    return {"user": user_out(user), "requiresVerification": True}
+    email_sent = await issue_otp(db, user, "verify")
+    return {
+        "user": user_out(user),
+        "requiresVerification": True,
+        "emailSent": email_sent,
+        "destination": mask_email(user.email),
+    }
 
 
 @router.post("/login")
@@ -171,14 +192,16 @@ async def login(payload: LoginRequest, db: AsyncSession = Depends(get_db)):
     if user.is_active is False:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="This account has been deactivated.")
     if user.is_verified is False:
-        await issue_otp(db, user, "verify")
+        email_sent = await issue_otp(db, user, "verify")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail={
                 "code": "account_not_verified",
                 "message": "Please verify your account. A new verification code has been sent.",
                 "userId": user.id,
-                "destination": user.phone or user.email,
+                "destination": user.email,
+                "destinationMasked": mask_email(user.email),
+                "emailSent": email_sent,
             },
         )
     return session_payload(user)
@@ -198,18 +221,29 @@ async def verify_otp(payload: OtpVerifyRequest, db: AsyncSession = Depends(get_d
 @router.post("/resend-otp")
 async def resend_otp(payload: ResendOtpRequest, db: AsyncSession = Depends(get_db)):
     user = await db.get(User, payload.user_id)
+    email_sent = False
     if user and user.is_verified is False:
-        await issue_otp(db, user, "verify")
-    return {"message": "If the account is awaiting verification, a new code has been sent."}
+        email_sent = await issue_otp(db, user, "verify")
+    return {
+        "message": "If the account is awaiting verification, a new code has been sent.",
+        "emailSent": email_sent,
+        "destination": mask_email(user.email) if user else None,
+    }
 
 
 @router.post("/forgot-password")
 async def forgot_password(payload: ForgotPasswordRequest, db: AsyncSession = Depends(get_db)):
     user = await find_user(db, payload.identifier)
+    email_sent = False
     if user and user.is_active is not False:
-        await issue_otp(db, user, "reset")
-    # Same response either way to avoid revealing which accounts exist
-    return {"message": "If the account exists, a reset code has been sent to the registered phone/email."}
+        email_sent = await issue_otp(db, user, "reset")
+    # Same wording either way to avoid revealing which accounts exist
+    return {
+        "message": "If the account exists, a reset code has been sent by email.",
+        "emailSent": email_sent,
+        "destination": mask_email(user.email) if user else None,
+        "expiresInMinutes": settings.OTP_EXPIRE_MINUTES,
+    }
 
 
 @router.post("/reset-password")

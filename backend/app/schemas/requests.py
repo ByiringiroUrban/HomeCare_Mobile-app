@@ -56,6 +56,22 @@ class ResendOtpRequest(CamelModel):
     user_id: str
 
 
+class DepositCreateRequest(CamelModel):
+    """Start a PawaPay mobile money collection.
+
+    When visit_id is supplied the amount and currency are taken from the visit
+    on the server, so the client cannot choose what it pays.
+    """
+
+    phone_number: str = Field(..., min_length=6)
+    provider: str = Field(..., min_length=2)
+    visit_id: Optional[str] = None
+    reference: Optional[str] = None
+    amount: Optional[float] = Field(None, gt=0)
+    currency: Optional[str] = Field(None, min_length=3, max_length=3)
+    customer_message: Optional[str] = None
+
+
 class ForgotPasswordRequest(CamelModel):
     identifier: str
 

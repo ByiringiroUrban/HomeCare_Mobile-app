@@ -103,6 +103,7 @@ export default function PatientTabsLayout() {
       <Tabs.Screen name="book/[doctorId]" options={{ href: null, headerShown: false }} />
       <Tabs.Screen name="visit/[id]" options={{ href: null, headerShown: false }} />
       <Tabs.Screen name="result/[id]" options={{ href: null, headerShown: false }} />
+      <Tabs.Screen name="pay/[visitId]" options={{ href: null, headerShown: false }} />
       <Tabs.Screen name="notifications" options={{ href: null, headerShown: false }} />
     </Tabs>
   );

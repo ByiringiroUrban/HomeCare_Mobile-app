@@ -4,7 +4,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.db.session import engine, Base
-from app.api import auth
+from app.api import auth, payments
+from app.db.migrate import apply_pending_columns
 
 from sqlalchemy import text
 
@@ -20,6 +21,7 @@ async def lifespan(app: FastAPI):
             print(f"[HomeCare DB] Version: {db_version}")
             print("[HomeCare DB] Initializing tables (User, PatientProfile, DoctorProfile)...")
             await conn.run_sync(Base.metadata.create_all)
+            await apply_pending_columns(conn)
             print("[HomeCare DB] SUCCESS: All tables verified and ready.")
     except Exception as e:
         print(f"[HomeCare DB] ERROR connecting to database: {e}")
@@ -44,6 +46,7 @@ app.add_middleware(
 )
 
 app.include_router(auth.router, prefix=f"{settings.API_V1_STR}/auth", tags=["auth"])
+app.include_router(payments.router, prefix=f"{settings.API_V1_STR}/payments", tags=["payments"])
 
 
 @app.get("/")

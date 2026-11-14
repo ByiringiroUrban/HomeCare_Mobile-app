@@ -14,6 +14,7 @@ import {
   ComplaintReport,
   MedicalAuditLog,
   VisitStatus,
+  PrescriptionItem,
 } from '../types/domain';
 import { SpecialtyItem, DEMO_USERS } from '../mock/fixtures';
 import { getCountryConfig } from '../constants/theme';
@@ -23,9 +24,24 @@ const SIMULATED_LATENCY_MS = 250;
 
 const delay = (ms = SIMULATED_LATENCY_MS) => new Promise((resolve) => setTimeout(resolve, ms));
 
+export interface OtpChallenge {
+  userId: string;
+  destination?: string;
+  emailSent: boolean;
+  requiresVerification: boolean;
+}
+
+export interface PasswordResetInfo {
+  message: string;
+  destination?: string;
+  emailSent: boolean;
+  expiresInMinutes: number;
+}
+
 export interface AuthService {
   login(identifier: string, demoRole?: string): Promise<{ user: User; token: string }>;
-  verifyOtp(code: string, userId: string): Promise<boolean>;
+  verifyOtp(code: string, userId: string): Promise<{ user: User; token: string }>;
+  resendOtp(userId: string): Promise<{ destination?: string; emailSent: boolean }>;
   registerPatient(data: {
     name: string;
     email: string;
@@ -34,24 +50,50 @@ export interface AuthService {
     country?: string;
     city?: string;
     district?: string;
-  }): Promise<User>;
+    consentGiven?: boolean;
+  }): Promise<OtpChallenge>;
   registerDoctor(data: {
     name: string;
     email: string;
     phone: string;
+    password: string;
     specialty: string;
     licenseNumber: string;
     qualifications: string[];
     experienceYears: number;
     coverageDistricts: string[];
     country?: string;
-  }): Promise<User>;
+  }): Promise<OtpChallenge>;
   getCurrentUser(userId: string): Promise<User | null>;
-  resetPassword(email: string): Promise<boolean>;
+  requestPasswordReset(identifier: string): Promise<PasswordResetInfo>;
+  resetPasswordWithCode(data: { identifier: string; code: string; newPassword: string }): Promise<void>;
 }
 
 // Live Backend API base URL (defaults to localhost:8000 on web/simulator or fallback)
-const API_BASE_URL = 'http://localhost:8000/api/v1';
+export const API_BASE_URL = 'http://localhost:8000/api/v1';
+
+/** Backend returns snake_case profile fields; the app works with camelCase. */
+function mapApiUser(raw: any): User {
+  return {
+    id: raw.id,
+    name: raw.name,
+    email: raw.email,
+    phone: raw.phone,
+    role: raw.role,
+    avatarUrl: raw.avatar_url ?? raw.avatarUrl,
+    createdAt: raw.created_at ?? raw.createdAt,
+  };
+}
+
+async function apiErrorDetail(res: Response): Promise<any> {
+  const body = await res.json().catch(() => ({}));
+  return body?.detail ?? body;
+}
+
+function isNetworkError(err: any): boolean {
+  const message = String(err?.message || '').toLowerCase();
+  return err instanceof TypeError || message.includes('fetch') || message.includes('network');
+}
 
 export const authService: AuthService = {
   async login(identifier: string, passwordOrRole: string = 'Password123!') {
@@ -85,19 +127,24 @@ export const authService: AuthService = {
       });
       if (res.ok) {
         const data = await res.json();
-        const user: User = {
-          id: data.user.id,
-          name: data.user.name,
-          email: data.user.email,
-          phone: data.user.phone,
-          role: data.user.role,
-          avatarUrl: data.user.avatar_url,
-          createdAt: data.user.created_at,
-        };
-        return { user, token: data.access_token };
+        return { user: mapApiUser(data.user), token: data.accessToken || data.access_token };
       }
-    } catch {
-      // Graceful fallback to mock store if offline or direct testing
+      const detail = await apiErrorDetail(res);
+      const error: any = new Error(
+        typeof detail === 'string' ? detail : detail?.message || 'Unable to sign in right now.'
+      );
+      error.code =
+        (typeof detail === 'object' && detail?.code) ||
+        (res.status === 401 ? 'invalid_credentials' : 'login_failed');
+      error.userId = typeof detail === 'object' ? detail?.userId : undefined;
+      error.destination =
+        typeof detail === 'object' ? detail?.destinationMasked || detail?.destination : undefined;
+      throw error;
+    } catch (err: any) {
+      // Explicit auth answers (bad password, unverified account) must reach the UI;
+      // only transport failures fall back to the local demo store.
+      if (err?.code) throw err;
+      if (!isNetworkError(err)) throw err;
     }
 
     await delay();
@@ -114,21 +161,52 @@ export const authService: AuthService = {
   },
 
   async verifyOtp(code: string, userId?: string) {
+    if (userId) {
+      try {
+        const res = await fetch(`${API_BASE_URL}/auth/verify-otp`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId, code: code.trim() }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          return { user: mapApiUser(data.user), token: data.accessToken || data.access_token || '' };
+        }
+        const detail = await apiErrorDetail(res);
+        throw new Error(
+          typeof detail === 'string' ? detail : detail?.message || 'Invalid or expired verification code.'
+        );
+      } catch (err: any) {
+        if (!isNetworkError(err)) throw err;
+      }
+    }
+    await delay(150);
+    if (code.trim() !== '123456') {
+      throw new Error('Invalid verification code. Please try again.');
+    }
+    const user = userId ? mockDomainStore.getUser(userId) : null;
+    if (!user) throw new Error('Invalid or expired verification code.');
+    return { user, token: `jwt-${user.id}-${Date.now()}` };
+  },
+
+  async resendOtp(userId: string) {
     try {
-      const res = await fetch(`${API_BASE_URL}/auth/verify-otp`, {
+      const res = await fetch(`${API_BASE_URL}/auth/resend-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code, user_id: userId }),
+        body: JSON.stringify({ userId }),
       });
       if (res.ok) {
         const data = await res.json();
-        return !!data.verified;
+        return { destination: data.destination, emailSent: !!data.emailSent };
       }
-    } catch {
-      // Fallback
+      const detail = await apiErrorDetail(res);
+      throw new Error(typeof detail === 'string' ? detail : detail?.message || 'Could not resend the code.');
+    } catch (err: any) {
+      if (!isNetworkError(err)) throw err;
     }
-    await delay(150);
-    return code === '123456' || code.length === 6;
+    await delay(200);
+    return { emailSent: false };
   },
 
   async registerPatient(data: {
@@ -139,6 +217,7 @@ export const authService: AuthService = {
     country?: string;
     city?: string;
     district?: string;
+    consentGiven?: boolean;
   }) {
     const market = getCountryConfig(data.country);
     const city = data.city || market.capitalCity;
@@ -152,18 +231,12 @@ export const authService: AuthService = {
           email: data.email || `${data.phone.replace(/[^0-9]/g, '')}@phone.homecare.rw`,
           phone: data.phone,
           password: data.password,
+          consentGiven: data.consentGiven ?? true,
         }),
       });
       if (res.ok) {
-        const userResp = await res.json();
-        const user: User = {
-          id: userResp.id,
-          name: userResp.name,
-          email: userResp.email,
-          phone: userResp.phone,
-          role: userResp.role,
-          createdAt: userResp.created_at,
-        };
+        const payload = await res.json();
+        const user = mapApiUser(payload.user ?? payload);
         // Also register in local cache store so subsequent visits can read it
         const profile: PatientProfile = {
           userId: user.id,
@@ -181,13 +254,20 @@ export const authService: AuthService = {
           consentTimestamp: new Date().toISOString(),
         };
         mockDomainStore.registerPatient(user, profile);
-        return user;
+        return {
+          userId: user.id,
+          destination: payload.destination ?? data.email,
+          emailSent: !!payload.emailSent,
+          requiresVerification: true,
+        };
       } else {
-        const errJson = await res.json().catch(() => ({}));
-        if (errJson.detail) throw new Error(errJson.detail);
+        const detail = await apiErrorDetail(res);
+        throw new Error(
+          typeof detail === 'string' ? detail : detail?.message || 'Registration failed. Please try again.'
+        );
       }
     } catch (e: any) {
-      if (e.message && !e.message.includes('fetch')) throw e;
+      if (!isNetworkError(e)) throw e;
     }
 
     await delay(300);
@@ -220,13 +300,49 @@ export const authService: AuthService = {
       consentTimestamp: new Date().toISOString(),
     };
     mockDomainStore.registerPatient(user, profile);
-    return user;
+    return { userId, destination: data.email, emailSent: false, requiresVerification: true };
   },
 
 
   async registerDoctor(data) {
-    await delay(350);
     const market = getCountryConfig(data.country);
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/register/doctor`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: data.name,
+          email: data.email,
+          phone: data.phone,
+          password: data.password,
+          specialty: data.specialty,
+          licenseNumber: data.licenseNumber,
+          experienceYears: data.experienceYears,
+          qualifications: data.qualifications,
+          coverageDistricts: data.coverageDistricts,
+          country: market.code,
+          city: market.capitalCity,
+        }),
+      });
+      if (res.ok) {
+        const payload = await res.json();
+        const user = mapApiUser(payload.user ?? payload);
+        return {
+          userId: user.id,
+          destination: payload.destination ?? data.email,
+          emailSent: !!payload.emailSent,
+          requiresVerification: true,
+        };
+      }
+      const detail = await apiErrorDetail(res);
+      throw new Error(
+        typeof detail === 'string' ? detail : detail?.message || 'Doctor onboarding failed. Please try again.'
+      );
+    } catch (e: any) {
+      if (!isNetworkError(e)) throw e;
+    }
+
+    await delay(350);
     const userId = `doctor-${Date.now().toString().slice(-4)}`;
     const user: User = {
       id: userId,
@@ -261,7 +377,7 @@ export const authService: AuthService = {
       workingHours: { start: '08:00', end: '17:00' },
     };
     mockDomainStore.registerDoctor(user, profile);
-    return user;
+    return { userId, destination: data.email, emailSent: false, requiresVerification: true };
   },
 
   async getCurrentUser(userId: string) {
@@ -269,9 +385,57 @@ export const authService: AuthService = {
     return mockDomainStore.getUser(userId) || null;
   },
 
-  async resetPassword() {
+  async requestPasswordReset(identifier: string) {
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier: identifier.trim() }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        return {
+          message: data.message,
+          destination: data.destination,
+          emailSent: !!data.emailSent,
+          expiresInMinutes: data.expiresInMinutes || 10,
+        };
+      }
+      const detail = await apiErrorDetail(res);
+      throw new Error(
+        typeof detail === 'string' ? detail : detail?.message || 'Could not send the reset code.'
+      );
+    } catch (err: any) {
+      if (!isNetworkError(err)) throw err;
+    }
+    await delay(250);
+    return {
+      message: 'If the account exists, a reset code has been sent by email.',
+      destination: undefined,
+      emailSent: false,
+      expiresInMinutes: 10,
+    };
+  },
+
+  async resetPasswordWithCode({ identifier, code, newPassword }: { identifier: string; code: string; newPassword: string }) {
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier: identifier.trim(), code: code.trim(), newPassword }),
+      });
+      if (res.ok) return;
+      const detail = await apiErrorDetail(res);
+      throw new Error(
+        typeof detail === 'string' ? detail : detail?.message || 'Invalid or expired verification code.'
+      );
+    } catch (err: any) {
+      if (!isNetworkError(err)) throw err;
+    }
     await delay(200);
-    return true;
+    if (code.trim() !== '123456') {
+      throw new Error('Invalid or expired verification code.');
+    }
   },
 };
 
@@ -484,6 +648,10 @@ export interface DoctorService {
   getConsultationRecord(visitId: string): Promise<ConsultationRecord | null>;
   saveConsultationDraft(record: Omit<ConsultationRecord, 'id' | 'createdAt' | 'updatedAt' | 'isDraft'>, actor: User): Promise<ConsultationRecord>;
   publishConsultationRecord(record: Omit<ConsultationRecord, 'id' | 'createdAt' | 'updatedAt' | 'isDraft'>, actor: User): Promise<ConsultationRecord>;
+  sendPrescriptionInCall(
+    data: { visitId: string; patientId: string; items: PrescriptionItem[] },
+    actor: User
+  ): Promise<ConsultationRecord>;
   publishLabResult(
     resultData: {
       visitId: string;
@@ -600,6 +768,43 @@ export const doctorService: DoctorService = {
       updatedAt: new Date().toISOString(),
     };
     return mockDomainStore.saveConsultationRecord(record, actor);
+  },
+
+  // Doctor writes a prescription while the video call is still running.
+  // It is published immediately, so the patient's dashboard and records update live.
+  async sendPrescriptionInCall(data, actor) {
+    await delay(300);
+    const now = new Date().toISOString();
+    const existing = mockDomainStore.getConsultationByVisit(data.visitId);
+
+    const record: ConsultationRecord = existing
+      ? {
+          ...existing,
+          prescriptions: [...existing.prescriptions, ...data.items],
+          isDraft: false,
+          publishedAt: now,
+          updatedAt: now,
+        }
+      : {
+          id: `rec-${Date.now().toString().slice(-4)}`,
+          visitId: data.visitId,
+          patientId: data.patientId,
+          doctorId: actor.id,
+          consultationNotes: 'Medication prescribed during the online video consultation.',
+          physicalExamination: '',
+          diagnosis: 'Online consultation — prescription issued',
+          prescriptions: data.items,
+          recommendations: [],
+          isLabRequired: false,
+          requiredLabTests: [],
+          followUpRecommended: false,
+          isDraft: false,
+          publishedAt: now,
+          createdAt: now,
+          updatedAt: now,
+        };
+
+    return mockDomainStore.issuePrescription(record, actor);
   },
 
   async publishLabResult(resultData, actor) {

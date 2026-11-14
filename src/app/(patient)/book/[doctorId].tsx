@@ -129,6 +129,22 @@ export default function BookVisitScreen() {
         paymentStatus: 'pending',
       });
 
+      // Mobile money visits go through PawaPay before tracking starts
+      if (paymentMethod === 'momo' || paymentMethod === 'airtel') {
+        router.replace({
+          pathname: '/(patient)/pay/[visitId]',
+          params: {
+            visitId: visit.id,
+            amount: String(total),
+            currency: currencyOf(doctor),
+            phone: momoNumber,
+            method: paymentMethod,
+            doctorName: doctor?.name || '',
+          },
+        } as any);
+        return;
+      }
+
       // Route to visit tracking screen
       router.replace(`/(patient)/visit/${visit.id}` as any);
     } catch (err: any) {
@@ -161,7 +177,7 @@ export default function BookVisitScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>1. Select Date & Available Time Slot</Text>
         <Text style={styles.sectionSubtitle}>
-          Choose from doctor's verified open windows or choose default:
+          Choose from doctor’s verified open windows or choose default:
         </Text>
 
         <View style={styles.slotList}>
@@ -325,7 +341,7 @@ export default function BookVisitScreen() {
         </Card>
 
         <Text style={[styles.sectionSubtitle, { marginTop: 12 }]}>
-          Select Payment Method (Simulated):
+          Select Payment Method:
         </Text>
         <View style={styles.paymentMethods}>
           <Pressable
@@ -358,7 +374,7 @@ export default function BookVisitScreen() {
 
         {paymentMethod !== 'cash_on_visit' && (
           <InputField
-            label="Mobile Money Number (Simulated)"
+            label="Mobile Money Number"
             placeholder={getCountryConfig(doctor?.country).phonePlaceholder}
             value={momoNumber}
             onChangeText={setMomoNumber}

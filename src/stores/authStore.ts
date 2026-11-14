@@ -15,6 +15,7 @@ interface AuthSessionState {
   // Actions
   loginDemo: (role: 'patient1' | 'patient2' | 'doctor1' | 'doctor2' | 'admin') => Promise<User>;
   loginCustom: (identifier: string, password?: string) => Promise<User>;
+  setSession: (user: User, token: string) => Promise<void>;
   logout: () => void;
   refreshProfile: () => Promise<void>;
   resetDemoData: () => void;
@@ -80,6 +81,27 @@ export const useAuthStore = create<AuthSessionState>((set, get) => ({
       set({ error: err.message || 'Login failed', isLoading: false });
       throw err;
     }
+  },
+
+  setSession: async (user, token) => {
+    // Used after OTP verification, where the backend already issued the token
+    let pProfile: PatientProfile | null = null;
+    let dProfile: DoctorProfile | null = null;
+
+    if (user.role === 'patient') {
+      pProfile = await patientService.getProfile(user.id);
+    } else if (user.role === 'doctor') {
+      dProfile = await doctorService.getProfile(user.id);
+    }
+
+    set({
+      currentUser: user,
+      patientProfile: pProfile,
+      doctorProfile: dProfile,
+      token,
+      isLoading: false,
+      error: null,
+    });
   },
 
   logout: () => {

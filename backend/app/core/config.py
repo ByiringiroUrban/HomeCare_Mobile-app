@@ -39,6 +39,12 @@ class Settings(BaseSettings):
     CLOUDINARY_API_KEY: Optional[str] = None
     CLOUDINARY_API_SECRET: Optional[str] = None
 
+    # PawaPay mobile money collections (deposits)
+    # "sandbox" uses api.sandbox.pawapay.io, "production" uses api.pawapay.io
+    PAWAPAY_ENVIRONMENT: str = "sandbox"
+    PAWAPAY_API_TOKEN: Optional[str] = None
+    PAWAPAY_BASE_URL: Optional[str] = None  # optional override for tests/proxies
+
     @property
     def smtp_configured(self) -> bool:
         return bool(self.SMTP_HOST and self.SMTP_USER and self.SMTP_PASS)

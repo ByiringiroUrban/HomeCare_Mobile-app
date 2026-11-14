@@ -41,6 +41,16 @@ export default function PatientHomeScreen() {
     enabled: !!currentUser,
   });
 
+  // Published consultation records — used to surface the newest prescription live
+  const { data: records } = useQuery({
+    queryKey: ['patient-records', currentUser?.id],
+    queryFn: () => patientService.getRecords(currentUser?.id || ''),
+    enabled: !!currentUser,
+    refetchInterval: 5000,
+  });
+
+  const latestPrescription = records?.consultations.find((rec) => rec.prescriptions.length > 0);
+
   // Specialties
   const { data: specialties = [] } = useQuery({
     queryKey: ['specialties'],
@@ -136,6 +146,45 @@ export default function PatientHomeScreen() {
               actionLabel="View Status Timeline"
               onActionPress={() => router.push(`/(patient)/visit/${upcomingVisit.id}` as any)}
             />
+          </View>
+        )}
+
+        {/* Latest Prescription issued by the doctor (e.g. during an online consultation) */}
+        {latestPrescription && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Latest Prescription</Text>
+              <Pressable onPress={() => router.push('/(patient)/records' as any)}>
+                <Text style={styles.sectionAction}>All Records ›</Text>
+              </Pressable>
+            </View>
+            <Pressable
+              style={styles.rxCard}
+              onPress={() => router.push('/(patient)/records' as any)}
+            >
+              <View style={styles.rxCardHeader}>
+                <Text style={styles.rxCardBadge}>℞ PRESCRIPTION</Text>
+                <Text style={styles.rxCardDate}>
+                  {latestPrescription.createdAt.split('T')[0]}
+                </Text>
+              </View>
+              {latestPrescription.prescriptions.slice(0, 2).map((rx) => (
+                <View key={rx.id} style={styles.rxLine}>
+                  <Text style={styles.rxMed} numberOfLines={1}>
+                    {rx.medicationName}
+                  </Text>
+                  <Text style={styles.rxDetail} numberOfLines={1}>
+                    {rx.dosage} · {rx.frequency} · {rx.durationDays} days
+                  </Text>
+                </View>
+              ))}
+              {latestPrescription.prescriptions.length > 2 && (
+                <Text style={styles.rxMore}>
+                  +{latestPrescription.prescriptions.length - 2} more medication(s)
+                </Text>
+              )}
+              <Text style={styles.rxHint}>Tap to view the full prescription ›</Text>
+            </Pressable>
           </View>
         )}
 
@@ -345,6 +394,54 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: THEME.colors.textMuted,
     marginTop: 1,
+  },
+  rxCard: {
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: THEME.colors.border,
+    borderRadius: THEME.borderRadius.lg,
+    padding: THEME.spacing.base,
+  },
+  rxCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  rxCardBadge: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: THEME.colors.primary,
+  },
+  rxCardDate: {
+    fontSize: 11,
+    color: THEME.colors.textMuted,
+  },
+  rxLine: {
+    paddingVertical: 5,
+    borderTopWidth: 1,
+    borderTopColor: THEME.colors.borderLight,
+  },
+  rxMed: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: THEME.colors.textPrimary,
+  },
+  rxDetail: {
+    fontSize: 11,
+    color: THEME.colors.textSecondary,
+    marginTop: 1,
+  },
+  rxMore: {
+    fontSize: 11,
+    color: THEME.colors.textMuted,
+    marginTop: 4,
+  },
+  rxHint: {
+    fontSize: 11,
+    color: THEME.colors.primary,
+    fontWeight: '700',
+    marginTop: 8,
   },
   emergencyFooter: {
     flexDirection: 'row',

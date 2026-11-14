@@ -41,6 +41,20 @@ export default function LoginScreen() {
         router.replace('/(admin)');
       }
     } catch (err: any) {
+      if (err?.code === 'account_not_verified') {
+        setErrorMsg(err.message || 'Please verify your email to continue.');
+        if (err.userId) {
+          router.push({
+            pathname: '/(auth)/otp-verification',
+            params: {
+              userId: err.userId,
+              destination: err.destination || '',
+              role: '',
+            },
+          });
+        }
+        return;
+      }
       setErrorMsg(err.message || 'Authentication failed. Check your credentials.');
     }
   };
@@ -95,7 +109,7 @@ export default function LoginScreen() {
       />
 
       <View style={styles.footerRow}>
-        <Text style={styles.footerText}>Don't have an account? </Text>
+        <Text style={styles.footerText}>Don’t have an account? </Text>
         <Pressable onPress={() => router.push('/(auth)/register-patient')}>
           <Text style={styles.signUpLink}>Register as Patient</Text>
         </Pressable>

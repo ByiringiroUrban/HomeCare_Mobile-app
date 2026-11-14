@@ -24,6 +24,8 @@ export default function PatientRecordsScreen() {
     queryKey: ['patient-records', currentUser?.id],
     queryFn: () => patientService.getRecords(currentUser?.id || ''),
     enabled: !!currentUser,
+    // Live: a doctor can issue a prescription while an online consultation is running
+    refetchInterval: 5000,
   });
 
   const consultations = data?.consultations || [];

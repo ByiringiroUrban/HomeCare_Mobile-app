@@ -34,12 +34,16 @@ export default function RegisterPatientScreen() {
       setErrorMsg('Full legal name is required.');
       return;
     }
-    if (!email.trim() && !phone.trim()) {
-      setErrorMsg('Please enter an email or phone number.');
+    if (!email.trim() || !/^\S+@\S+\.\S+$/.test(email.trim())) {
+      setErrorMsg('A valid email address is required — your verification code is emailed there.');
       return;
     }
-    if (!password || password.length < 6) {
-      setErrorMsg('Password must be at least 6 characters.');
+    if (!phone.trim()) {
+      setErrorMsg('Please enter your phone number.');
+      return;
+    }
+    if (!password || password.length < 8) {
+      setErrorMsg('Password must be at least 8 characters.');
       return;
     }
     if (!consentTerms) {
@@ -54,17 +58,22 @@ export default function RegisterPatientScreen() {
     setErrorMsg('');
     setLoading(true);
     try {
-      const user = await authService.registerPatient({
+      const challenge = await authService.registerPatient({
         name: name.trim(),
         email: email.trim(),
         phone: phone.trim(),
         password,
         country: country.code,
+        consentGiven: consentHealthData,
       });
       // Navigate to OTP verification
       router.push({
         pathname: '/(auth)/otp-verification',
-        params: { userId: user.id, destination: phone || email, role: 'patient' },
+        params: {
+          userId: challenge.userId,
+          destination: challenge.destination || email.trim(),
+          role: 'patient',
+        },
       });
     } catch (err: any) {
       setErrorMsg(err.message || 'Registration failed');
@@ -106,12 +115,13 @@ export default function RegisterPatientScreen() {
       />
 
       <InputField
-        label="Email Address (Optional)"
+        label="Email Address"
         placeholder="diane@example.rw"
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
         autoCapitalize="none"
+        hint="We email your verification code here"
       />
 
       <InputField
@@ -120,7 +130,7 @@ export default function RegisterPatientScreen() {
         value={password}
         onChangeText={setPassword}
         secureTextEntry
-        hint="Minimum 6 characters"
+        hint="Minimum 8 characters"
       />
 
       {/* Consent Checkboxes (FR-1.5 Law on Personal Data Protection) */}
@@ -153,7 +163,7 @@ export default function RegisterPatientScreen() {
       </View>
 
       <Button
-        title="Continue to OTP Verification"
+        title="Continue to Email Verification"
         onPress={handleRegister}
         loading={loading}
         size="lg"

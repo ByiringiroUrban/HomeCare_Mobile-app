@@ -200,6 +200,32 @@ class AuditLog(Base):
     details = Column(Text, default="")
 
 
+class Payment(Base):
+    """A PawaPay mobile money deposit.
+
+    The row is written *before* calling PawaPay so the depositId always exists,
+    which is what makes reconciliation possible after a network failure.
+    """
+
+    __tablename__ = "payments"
+
+    id = Column(String, primary_key=True, default=generate_uuid)  # sent as depositId
+    user_id = Column(String, ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
+    reference = Column(String, nullable=True, index=True)  # e.g. the visit id
+    amount = Column(Integer, nullable=False)
+    currency = Column(String, nullable=False)
+    phone_number = Column(String, nullable=False)
+    provider = Column(String, nullable=False)
+    status = Column(String, default="CREATED", index=True, nullable=False)
+    failure_code = Column(String, nullable=True)
+    failure_message = Column(Text, nullable=True)
+    provider_transaction_id = Column(String, nullable=True)
+    environment = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False)
+    completed_at = Column(DateTime(timezone=True), nullable=True)
+
+
 class OtpCode(Base):
     __tablename__ = "otp_codes"
 

@@ -22,6 +22,7 @@ export default function RegisterDoctorScreen() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState(country.phonePrefix);
+  const [password, setPassword] = useState('');
   const [specialty, setSpecialty] = useState('General Medicine');
   const [licenseNumber, setLicenseNumber] = useState('');
   const [qualifications, setQualifications] = useState('');
@@ -47,6 +48,10 @@ export default function RegisterDoctorScreen() {
 
   const handleRegister = async () => {
     if (!name.trim()) return setErrorMsg('Doctor full name is required.');
+    if (!email.trim() || !/^\S+@\S+\.\S+$/.test(email.trim()))
+      return setErrorMsg('A valid work email is required — your verification code is emailed there.');
+    if (password.length < 8)
+      return setErrorMsg('Password must be at least 8 characters.');
     if (!licenseNumber.trim())
       return setErrorMsg(`${country.regulatoryBody} license number is required.`);
     if (selectedDistricts.length === 0)
@@ -55,10 +60,11 @@ export default function RegisterDoctorScreen() {
     setErrorMsg('');
     setLoading(true);
     try {
-      const user = await authService.registerDoctor({
+      const challenge = await authService.registerDoctor({
         name: name.trim().startsWith('Dr.') ? name.trim() : `Dr. ${name.trim()}`,
         email: email.trim(),
         phone: phone.trim(),
+        password,
         specialty,
         licenseNumber: licenseNumber.trim(),
         qualifications: qualifications.split(',').map((q) => q.trim()).filter(Boolean),
@@ -69,7 +75,11 @@ export default function RegisterDoctorScreen() {
 
       router.push({
         pathname: '/(auth)/otp-verification',
-        params: { userId: user.id, destination: phone || email, role: 'doctor' },
+        params: {
+          userId: challenge.userId,
+          destination: challenge.destination || email.trim(),
+          role: 'doctor',
+        },
       });
     } catch (err: any) {
       setErrorMsg(err.message || 'Doctor onboarding failed');
@@ -147,6 +157,16 @@ export default function RegisterDoctorScreen() {
         onChangeText={setEmail}
         keyboardType="email-address"
         autoCapitalize="none"
+        hint="We email your verification code here"
+      />
+
+      <InputField
+        label="Password"
+        placeholder="Create a secure password"
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry
+        hint="Minimum 8 characters"
       />
 
       {/* Coverage Districts */}

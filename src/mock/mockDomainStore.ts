@@ -277,6 +277,15 @@ class MockDomainStore {
     return request;
   }
 
+  /** Mirror a mobile money payment result onto the local visit record. */
+  public setVisitPaymentStatus(visitId: string, status: 'pending' | 'completed' | 'failed'): void {
+    const visit = this.visits.get(visitId);
+    if (!visit) return;
+    visit.paymentStatus = status;
+    visit.updatedAt = new Date().toISOString();
+    this.visits.set(visitId, visit);
+  }
+
   public updateVisitStatus(
     visitId: string,
     newStatus: VisitStatus,
@@ -398,6 +407,35 @@ class MockDomainStore {
       record.id,
       record.patientId,
       record.isDraft ? 'Drafted consultation record notes' : 'Published medical consultation record & Rx to patient'
+    );
+    return record;
+  }
+
+  // In-call prescription: publishes immediately so the patient sees it in real time
+  public issuePrescription(record: ConsultationRecord, actor: User): ConsultationRecord {
+    this.consultations.set(record.visitId, record);
+
+    const notif: AppNotification = {
+      id: `notif-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+      recipientUserId: record.patientId,
+      title: 'New Prescription Available',
+      body: `${actor.name} issued a prescription during your online consultation. Tap to view it.`,
+      type: 'result_ready',
+      referenceId: record.visitId,
+      isRead: false,
+      createdAt: new Date().toISOString(),
+    };
+    this.notifications.set(notif.id, notif);
+
+    this.logAudit(
+      actor.id,
+      actor.name,
+      actor.role,
+      'PUBLISH',
+      'consultation_record',
+      record.id,
+      record.patientId,
+      'Issued electronic prescription during online video consultation'
     );
     return record;
   }

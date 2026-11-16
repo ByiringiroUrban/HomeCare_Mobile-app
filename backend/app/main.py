@@ -3,27 +3,26 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
-from app.db.session import engine, Base
+from app.db.session import engine, ensure_schema
 from app.api import auth, payments
-from app.db.migrate import apply_pending_columns
 
 from sqlalchemy import text
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("\n" + "=" * 60)
     print("[HomeCare DB] Connecting to PostgreSQL database...")
     try:
-        async with engine.begin() as conn:
+        async with engine.connect() as conn:
             result = await conn.execute(text("SELECT version();"))
             db_version = result.scalar()
-            print(f"[HomeCare DB] SUCCESS: Connected to Neon PostgreSQL!")
+            print("[HomeCare DB] SUCCESS: Connected to Neon PostgreSQL!")
             print(f"[HomeCare DB] Version: {db_version}")
-            print("[HomeCare DB] Initializing tables (User, PatientProfile, DoctorProfile)...")
-            await conn.run_sync(Base.metadata.create_all)
-            await apply_pending_columns(conn)
-            print("[HomeCare DB] SUCCESS: All tables verified and ready.")
+        await ensure_schema()
+        print("[HomeCare DB] SUCCESS: All tables verified and ready.")
     except Exception as e:
+        # Never block startup: the first request retries via ensure_schema()
         print(f"[HomeCare DB] ERROR connecting to database: {e}")
     print("=" * 60 + "\n")
     yield
@@ -60,4 +59,4 @@ def root():
 
 @app.get("/health")
 def health_check():
-    return {"status": "ok"}
+    return {"status": "ok", "environment": settings.PAWAPAY_ENVIRONMENT}

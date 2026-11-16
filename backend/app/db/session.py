@@ -1,6 +1,11 @@
+import asyncio
+import os
 from typing import AsyncGenerator
+
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy.orm import declarative_base
+from sqlalchemy.pool import NullPool
+
 from app.core.config import settings
 
 # Adjust connection URL and args for asyncpg with Neon PostgreSQL
@@ -20,13 +25,20 @@ if "sslmode=require" in db_url or "ssl=require" in db_url or "neon.tech" in db_u
     db_url = base_url
     connect_args = {"ssl": True}
 
-engine = create_async_engine(
-    db_url,
-    echo=False,
-    future=True,
-    pool_pre_ping=True,
-    connect_args=connect_args
-)
+# Serverless instances are frozen between invocations, so a pooled connection
+# would sit open and quickly exhaust the database's connection limit.
+IS_SERVERLESS = bool(os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"))
+
+engine_options = {
+    "echo": False,
+    "future": True,
+    "pool_pre_ping": True,
+    "connect_args": connect_args,
+}
+if IS_SERVERLESS:
+    engine_options["poolclass"] = NullPool
+
+engine = create_async_engine(db_url, **engine_options)
 
 
 AsyncSessionLocal = async_sessionmaker(
@@ -39,8 +51,39 @@ AsyncSessionLocal = async_sessionmaker(
 
 Base = declarative_base()
 
+_schema_ready = False
+_schema_lock = asyncio.Lock()
+
+
+async def ensure_schema() -> None:
+    """Create missing tables and top up missing columns, once per process.
+
+    This normally runs from the app lifespan, but serverless platforms do not
+    always execute ASGI startup, so it is also triggered by the first
+    database-backed request.
+    """
+    global _schema_ready
+    if _schema_ready:
+        return
+
+    async with _schema_lock:
+        if _schema_ready:
+            return
+
+        # Import the models so every table is registered with the metadata
+        from app.db.migrate import apply_pending_columns
+        from app.models import domain as _domain  # noqa: F401
+        from app.models import user as _user  # noqa: F401
+
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+            await apply_pending_columns(conn)
+
+        _schema_ready = True
+
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
+    await ensure_schema()
     async with AsyncSessionLocal() as session:
         try:
             yield session

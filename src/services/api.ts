@@ -16,6 +16,7 @@ import {
   VisitStatus,
   PrescriptionItem,
 } from '../types/domain';
+import Constants from 'expo-constants';
 import { SpecialtyItem, DEMO_USERS } from '../mock/fixtures';
 import { getCountryConfig } from '../constants/theme';
 import { mockDomainStore } from '../mock/mockDomainStore';
@@ -69,8 +70,12 @@ export interface AuthService {
   resetPasswordWithCode(data: { identifier: string; code: string; newPassword: string }): Promise<void>;
 }
 
-// Live Backend API base URL (defaults to localhost:8000 on web/simulator or fallback)
-export const API_BASE_URL = 'http://localhost:8000/api/v1';
+// Live Backend API base URL. Point extra.apiBaseUrl in app.json at the deployed
+// API (e.g. https://home-care-be-teal.vercel.app/api/v1) to use it from devices.
+export const API_BASE_URL = (
+  (Constants.expoConfig?.extra as { apiBaseUrl?: string } | undefined)?.apiBaseUrl ||
+  'http://localhost:8000/api/v1'
+).replace(/\/+$/, '');
 
 /** Backend returns snake_case profile fields; the app works with camelCase. */
 function mapApiUser(raw: any): User {

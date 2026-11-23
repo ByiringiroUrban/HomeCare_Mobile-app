@@ -163,7 +163,6 @@ async def create_deposit(
             provider=payload.provider,
             client_reference_id=reference,
             customer_message=payload.customer_message,
-            statement_description="HomeCare consult",
         )
     except pawapay.PawaPayError as exc:
         if exc.failure_code == "NOT_CONFIGURED":

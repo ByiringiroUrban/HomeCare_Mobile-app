@@ -23,6 +23,13 @@ import { mockDomainStore } from '../mock/mockDomainStore';
 
 const SIMULATED_LATENCY_MS = 250;
 
+// Bearer token of the signed-in user, mirrored from the auth store so services
+// here can call protected endpoints without importing the store (import cycle).
+let sessionToken: string | null = null;
+export const setApiToken = (token: string | null) => {
+  sessionToken = token;
+};
+
 const delay = (ms = SIMULATED_LATENCY_MS) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export interface OtpChallenge {
@@ -90,6 +97,19 @@ function mapApiUser(raw: any): User {
   };
 }
 
+/**
+ * The seeded backend accounts mirror DEMO_USERS. Reuse the demo identity for
+ * those emails so the local (mock) clinical data still resolves by user id,
+ * while the backend token is kept for real API calls.
+ */
+function resolveSessionUser(raw: any): User {
+  const mapped = mapApiUser(raw);
+  const demo = Object.values(DEMO_USERS).find(
+    (u) => u.email.toLowerCase() === (mapped.email || '').toLowerCase()
+  );
+  return demo ?? mapped;
+}
+
 async function apiErrorDetail(res: Response): Promise<any> {
   const body = await res.json().catch(() => ({}));
   return body?.detail ?? body;
@@ -132,7 +152,7 @@ export const authService: AuthService = {
       });
       if (res.ok) {
         const data = await res.json();
-        return { user: mapApiUser(data.user), token: data.accessToken || data.access_token };
+        return { user: resolveSessionUser(data.user), token: data.accessToken || data.access_token };
       }
       const detail = await apiErrorDetail(res);
       const error: any = new Error(
@@ -175,7 +195,7 @@ export const authService: AuthService = {
         });
         if (res.ok) {
           const data = await res.json();
-          return { user: mapApiUser(data.user), token: data.accessToken || data.access_token || '' };
+          return { user: resolveSessionUser(data.user), token: data.accessToken || data.access_token || '' };
         }
         const detail = await apiErrorDetail(res);
         throw new Error(
@@ -332,6 +352,32 @@ export const authService: AuthService = {
       if (res.ok) {
         const payload = await res.json();
         const user = mapApiUser(payload.user ?? payload);
+        // Mirror the new doctor into the local demo store so the in-app admin
+        // queue and patient directory can see the account that was just created.
+        mockDomainStore.registerDoctor(user, {
+          userId: user.id,
+          name: user.name,
+          email: user.email,
+          phone: user.phone,
+          specialty: data.specialty,
+          licenseNumber: data.licenseNumber,
+          qualifications: data.qualifications,
+          experienceYears: data.experienceYears,
+          coverageDistricts: data.coverageDistricts,
+          country: market.code,
+          city: market.capitalCity,
+          currency: market.currency,
+          bio: `Board-registered specialist physician offering home visits in ${market.capitalCity}.`,
+          languages: market.languages.slice(0, 2),
+          consultationFeeRwf: market.baseTravelFee * 5,
+          travelFeeRwf: market.baseTravelFee,
+          rating: 0,
+          reviewCount: 0,
+          verificationStatus: 'pending',
+          isOnline: false,
+          workingDays: [1, 2, 3, 4, 5],
+          workingHours: { start: '08:00', end: '17:00' },
+        });
         return {
           userId: user.id,
           destination: payload.destination ?? data.email,
@@ -856,6 +902,19 @@ export const adminService: AdminService = {
 
   async updateDoctorVerification(doctorId: string, status: 'approved' | 'pending' | 'suspended') {
     await delay(200);
+    // Doctors registered through the API also exist on the server: keep their
+    // credential status in step. Demo-only doctors simply 404 and are ignored.
+    if (sessionToken) {
+      try {
+        await fetch(`${API_BASE_URL}/admin/doctors/${doctorId}/verification`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${sessionToken}` },
+          body: JSON.stringify({ status }),
+        });
+      } catch {
+        // Offline demo mode: the local store below remains the source of truth
+      }
+    }
     return mockDomainStore.updateDoctorStatus(doctorId, status);
   },
 

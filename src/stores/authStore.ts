@@ -1,7 +1,7 @@
 // User Session Store with Zustand and Account Isolation
 import { create } from 'zustand';
 import { User, PatientProfile, DoctorProfile } from '../types/domain';
-import { authService, patientService, doctorService } from '../services/api';
+import { authService, patientService, doctorService, setApiToken } from '../services/api';
 import { mockDomainStore } from '../mock/mockDomainStore';
 
 interface AuthSessionState {
@@ -42,6 +42,7 @@ export const useAuthStore = create<AuthSessionState>((set, get) => ({
         dProfile = await doctorService.getProfile(user.id);
       }
 
+      setApiToken(token);
       set({
         currentUser: user,
         patientProfile: pProfile,
@@ -69,6 +70,7 @@ export const useAuthStore = create<AuthSessionState>((set, get) => ({
         dProfile = await doctorService.getProfile(user.id);
       }
 
+      setApiToken(token);
       set({
         currentUser: user,
         patientProfile: pProfile,
@@ -94,6 +96,7 @@ export const useAuthStore = create<AuthSessionState>((set, get) => ({
       dProfile = await doctorService.getProfile(user.id);
     }
 
+    setApiToken(token);
     set({
       currentUser: user,
       patientProfile: pProfile,
@@ -105,6 +108,7 @@ export const useAuthStore = create<AuthSessionState>((set, get) => ({
   },
 
   logout: () => {
+    setApiToken(null);
     set({
       currentUser: null,
       patientProfile: null,

@@ -124,7 +124,6 @@ async def initiate_deposit(
     provider: str,
     client_reference_id: Optional[str] = None,
     customer_message: Optional[str] = None,
-    statement_description: Optional[str] = None,
 ) -> dict:
     """Ask PawaPay to collect money from a mobile wallet."""
     payer = {
@@ -144,8 +143,6 @@ async def initiate_deposit(
         body["clientReferenceId"] = client_reference_id[:64]
     if customer_message:
         body["customerMessage"] = customer_message[:64]
-    if statement_description:
-        body["statementDescription"] = statement_description[:22]
 
     return await _request("POST", "/v2/deposits", body)
 

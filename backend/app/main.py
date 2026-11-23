@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.db.session import engine, ensure_schema
-from app.api import auth, payments
+from app.api import admin, auth, doctor, doctors, meta, patient, payments, shared
 
 from sqlalchemy import text
 
@@ -45,6 +45,14 @@ app.add_middleware(
 )
 
 app.include_router(auth.router, prefix=f"{settings.API_V1_STR}/auth", tags=["auth"])
+app.include_router(meta.router, prefix=f"{settings.API_V1_STR}/meta", tags=["meta"])
+app.include_router(doctors.router, prefix=f"{settings.API_V1_STR}/doctors", tags=["doctors"])
+app.include_router(doctor.router, prefix=f"{settings.API_V1_STR}/doctor", tags=["doctor"])
+app.include_router(patient.router, prefix=f"{settings.API_V1_STR}/patient", tags=["patient"])
+app.include_router(shared.visits_router, prefix=f"{settings.API_V1_STR}/visits", tags=["visits"])
+app.include_router(shared.notifications_router, prefix=f"{settings.API_V1_STR}/notifications", tags=["notifications"])
+app.include_router(shared.complaints_router, prefix=f"{settings.API_V1_STR}/complaints", tags=["complaints"])
+app.include_router(admin.router, prefix=f"{settings.API_V1_STR}/admin", tags=["admin"])
 app.include_router(payments.router, prefix=f"{settings.API_V1_STR}/payments", tags=["payments"])
 
 

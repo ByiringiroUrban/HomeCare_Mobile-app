@@ -86,6 +86,7 @@ $env:PYTHONPATH="backend"; .\backend\venv\Scripts\python.exe backend/verify_auth
 ---
 
 
+
 ### 2. Demo Accounts & Test Credentials
 
 Fast-track demo account buttons and auto-fill selectors are accessible on the Welcome screen (`/(auth)/welcome`), the Login screen (`/(auth)/login`), and via the persistent top bar (`👑 Admin` quick switch):

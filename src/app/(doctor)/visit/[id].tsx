@@ -14,7 +14,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { THEME } from '../../../constants/theme';
 import { useAuthStore } from '../../../stores/authStore';
 import { patientService, doctorService } from '../../../services/api';
-import { mockDomainStore } from '../../../mock/mockDomainStore';
 import { Badge } from '../../../components/ui/Badge';
 import { Card } from '../../../components/ui/Card';
 import { Button } from '../../../components/ui/Button';
@@ -32,7 +31,11 @@ export default function DoctorVisitCockpitScreen() {
     refetchInterval: 3000,
   });
 
-  const patientProfile = visit ? mockDomainStore.getPatientProfile(visit.patientId) : undefined;
+  const { data: patientProfile } = useQuery({
+    queryKey: ['doctor-patient-profile', visit?.patientId],
+    queryFn: () => doctorService.getPatient(visit!.patientId),
+    enabled: !!visit?.patientId,
+  });
 
   if (!visit) {
     return (
@@ -106,7 +109,9 @@ export default function DoctorVisitCockpitScreen() {
         </View>
         <Text style={styles.districtText}>District: {visit.district}</Text>
         {visit.accessInstructions && (
-          <Text style={styles.accessText}>Access Instructions: "{visit.accessInstructions}"</Text>
+          <Text style={styles.accessText}>
+            Access Instructions: &quot;{visit.accessInstructions}&quot;
+          </Text>
         )}
 
         <Button

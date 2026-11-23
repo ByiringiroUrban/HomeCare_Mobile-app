@@ -106,8 +106,9 @@ export default function ResultDetailScreen() {
           <View style={styles.pdfBody}>
             <Text style={styles.pdfHeadline}>CONFIDENTIAL MEDICAL REPORT</Text>
             <Text style={styles.pdfLine}>Patient ID: {result.patientId}</Text>
-            <Text style={styles.pdfLine}>Collection Date: 2026-10-20 (Residence)</Text>
-            <Text style={styles.pdfLine}>Processed at: Central Biomedical Reference Laboratory</Text>
+            <Text style={styles.pdfLine}>
+              Issued: {result.publishedAt ? new Date(result.publishedAt).toLocaleDateString() : '—'}
+            </Text>
             <View style={styles.pdfSeparator} />
             <Text style={styles.pdfLine}>Summary: {result.summaryFindings}</Text>
             <View style={styles.pdfSeparator} />

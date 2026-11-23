@@ -9,14 +9,13 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import { THEME, getCountryConfig } from '../../../constants/theme';
+import { THEME } from '../../../constants/theme';
 import { useAuthStore } from '../../../stores/authStore';
 import { patientService, doctorService } from '../../../services/api';
-import { mockDomainStore } from '../../../mock/mockDomainStore';
 import { Card } from '../../../components/ui/Card';
 import { Button } from '../../../components/ui/Button';
 import { InputField } from '../../../components/ui/InputField';
-import { PrescriptionItem, LabSample } from '../../../types/domain';
+import { PrescriptionItem } from '../../../types/domain';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function DoctorConsultationWorkspaceScreen() {
@@ -29,54 +28,47 @@ export default function DoctorConsultationWorkspaceScreen() {
     enabled: !!visitId,
   });
 
-  const existingRecord = visitId ? mockDomainStore.getConsultationByVisit(visitId) : undefined;
+  // An existing draft or published record is loaded from the database
+  const { data: existingRecord } = useQuery({
+    queryKey: ['consultation-record', visitId],
+    queryFn: () => doctorService.getConsultationRecord(visitId || ''),
+    enabled: !!visitId,
+  });
 
-  // Clinical State Form
-  const [physicalExam, setPhysicalExam] = useState(
-    existingRecord?.physicalExamination ||
-      'BP: 120/80 mmHg | HR: 74 bpm | SpO2: 99% | Temp: 37.1 C | Chest clear to auscultation'
-  );
-  const [diagnosis, setDiagnosis] = useState(
-    existingRecord?.diagnosis || 'Acute Rhinopharyngitis (Common Cold)'
-  );
-  const [icdCode, setIcdCode] = useState(existingRecord?.icdCode || 'J00');
-  const [clinicalNotes, setClinicalNotes] = useState(
-    existingRecord?.consultationNotes ||
-      'Patient examined at residence. Symptoms started 4 days ago. Rest and fluids advised.'
-  );
-  const [recommendations, setRecommendations] = useState(
-    existingRecord?.recommendations.join('\n') ||
-      'Drink plenty of warm fluids.\nRest at home for 48 hours.\nMonitor temperature twice daily.'
-  );
+  // Clinical State Form. Edits override the stored record; until the doctor
+  // types, the values saved in the database are shown.
+  const [physicalExamInput, setPhysicalExam] = useState<string | null>(null);
+  const [diagnosisInput, setDiagnosis] = useState<string | null>(null);
+  const [icdCodeInput, setIcdCode] = useState<string | null>(null);
+  const [clinicalNotesInput, setClinicalNotes] = useState<string | null>(null);
+  const [recommendationsInput, setRecommendations] = useState<string | null>(null);
+
+  const physicalExam = physicalExamInput ?? existingRecord?.physicalExamination ?? '';
+  const diagnosis = diagnosisInput ?? existingRecord?.diagnosis ?? '';
+  const icdCode = icdCodeInput ?? existingRecord?.icdCode ?? '';
+  const clinicalNotes = clinicalNotesInput ?? existingRecord?.consultationNotes ?? '';
+  const recommendations =
+    recommendationsInput ?? existingRecord?.recommendations.join('\n') ?? '';
 
   // Electronic Prescriptions
-  const [prescriptions, setPrescriptions] = useState<PrescriptionItem[]>(
-    existingRecord?.prescriptions || [
-      {
-        id: 'rx-tmp-1',
-        medicationName: 'Paracetamol 500mg',
-        dosage: '1 tablet',
-        frequency: 'Every 8 hours as needed',
-        durationDays: 3,
-        instructions: 'Take after meals for fever relief.',
-      },
-    ]
-  );
+  const [prescriptionsInput, setPrescriptions] = useState<PrescriptionItem[] | null>(null);
+  const prescriptions = prescriptionsInput ?? existingRecord?.prescriptions ?? [];
   const [newMedName, setNewMedName] = useState('');
   const [newDosage, setNewDosage] = useState('1 tablet');
   const [newFreq, setNewFreq] = useState('Twice daily');
   const [newDuration, setNewDuration] = useState('5');
 
   // Lab Specimen Collection (SRS FR-6.2, FR-6.3)
-  const [isLabRequired, setIsLabRequired] = useState(existingRecord?.isLabRequired || false);
-  const [labTests, setLabTests] = useState('Full Blood Count (FBC), Malaria Rapid Test');
+  const [labRequiredInput, setLabRequiredInput] = useState<boolean | null>(null);
+  const [labTestsInput, setLabTests] = useState<string | null>(null);
   const [sampleCollected, setSampleCollected] = useState(false);
+
+  const isLabRequired = labRequiredInput ?? existingRecord?.isLabRequired ?? false;
+  const labTests = labTestsInput ?? existingRecord?.requiredLabTests.join(', ') ?? '';
 
   // Result Upload / Publication (SRS FR-7.1)
   const [publishResultNow, setPublishResultNow] = useState(false);
-  const [labFindingsSummary, setLabFindingsSummary] = useState(
-    'FBC within normal limits. Malaria RDT: Negative. CRP: Normal.'
-  );
+  const [labFindingsSummary, setLabFindingsSummary] = useState('');
 
   const [savingDraft, setSavingDraft] = useState(false);
   const [publishing, setPublishing] = useState(false);
@@ -115,10 +107,10 @@ export default function DoctorConsultationWorkspaceScreen() {
           prescriptions,
           recommendations: recommendations.split('\n').filter(Boolean),
           isLabRequired,
-          requiredLabTests: isLabRequired ? labTests.split(',').map((t) => t.trim()) : [],
-          followUpRecommended: true,
-          followUpDate: '2026-10-28',
-          followUpNotes: 'Check resolution of acute symptoms.',
+          requiredLabTests: isLabRequired
+            ? labTests.split(',').map((t) => t.trim()).filter(Boolean)
+            : [],
+          followUpRecommended: false,
         },
         currentUser
       );
@@ -140,21 +132,11 @@ export default function DoctorConsultationWorkspaceScreen() {
 
       // Create lab specimen tracking record if tests required (FR-6.3)
       if (isLabRequired && sampleCollected) {
-        const sample: LabSample = {
-          id: `smp-${Date.now().toString().slice(-4)}`,
-          sampleCode: `SMP-${getCountryConfig(visit.country).code}-${Math.floor(1000 + Math.random() * 9000)}`,
-          visitId: visit.id,
-          patientId: visit.patientId,
-          doctorId: currentUser.id,
-          testNames: labTests.split(',').map((t) => t.trim()),
-          collectionTime: new Date().toISOString(),
-          destinationLab: `${visit.district} Central Biomedical Laboratory`,
-          country: visit.country,
-          currency: visit.currency,
-          status: 'collected',
+        const sample = await doctorService.createSample(visit.id, {
+          testNames: labTests.split(',').map((t) => t.trim()).filter(Boolean),
+          destinationLab: `${visit.district || 'Central'} Biomedical Laboratory`,
           notes: 'Cold chain secured during transport.',
-        };
-        mockDomainStore.createSample(sample);
+        });
         sampleId = sample.id;
       }
 
@@ -171,11 +153,11 @@ export default function DoctorConsultationWorkspaceScreen() {
           prescriptions,
           recommendations: recommendations.split('\n').filter(Boolean),
           isLabRequired,
-          requiredLabTests: isLabRequired ? labTests.split(',').map((t) => t.trim()) : [],
+          requiredLabTests: isLabRequired
+            ? labTests.split(',').map((t) => t.trim()).filter(Boolean)
+            : [],
           sampleId,
-          followUpRecommended: true,
-          followUpDate: '2026-10-28',
-          followUpNotes: 'Check resolution of symptoms.',
+          followUpRecommended: false,
         },
         currentUser
       );
@@ -260,7 +242,7 @@ export default function DoctorConsultationWorkspaceScreen() {
               <Text style={styles.rxDetails}>
                 {p.dosage} • {p.frequency} • {p.durationDays} days
               </Text>
-              <Text style={styles.rxInst}>"{p.instructions}"</Text>
+              <Text style={styles.rxInst}>&quot;{p.instructions}&quot;</Text>
             </View>
             <Pressable onPress={() => handleRemovePrescription(p.id)} style={styles.removeBtn}>
               <Ionicons name="close-circle-outline" size={20} color={THEME.colors.error} />
@@ -310,7 +292,7 @@ export default function DoctorConsultationWorkspaceScreen() {
         <Text style={styles.sectionTitle}>4. Laboratory Testing & Specimen Tracking</Text>
         <Pressable
           style={styles.checkboxRow}
-          onPress={() => setIsLabRequired(!isLabRequired)}
+          onPress={() => setLabRequiredInput(!isLabRequired)}
         >
           <View style={[styles.checkbox, isLabRequired && styles.checkboxActive]}>
             {isLabRequired && <Ionicons name="checkmark" size={14} color="#FFF" />}

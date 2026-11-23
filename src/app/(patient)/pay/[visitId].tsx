@@ -2,14 +2,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
 import { THEME } from '../../../constants/theme';
 import { formatMoney } from '../../../utils/money';
 import { Button } from '../../../components/ui/Button';
 import { Card } from '../../../components/ui/Card';
 import { paymentService, PaymentRecord } from '../../../services/payments';
-import { mockDomainStore } from '../../../mock/mockDomainStore';
 
 const FINAL_STATUSES = ['COMPLETED', 'FAILED', 'REJECTED'];
 
@@ -28,6 +27,7 @@ export default function PayVisitScreen() {
   const currency = (params.currency || 'RWF').toUpperCase();
   const phone = params.phone || '';
 
+  const queryClient = useQueryClient();
   const [providerOverride, setProviderOverride] = useState('');
   const [deposit, setDeposit] = useState<PaymentRecord | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
@@ -66,6 +66,7 @@ export default function PayVisitScreen() {
         phoneNumber: phone,
         provider,
         reference: visitId || undefined,
+        visitId: visitId || undefined,
         customerMessage: 'HomeCare consultation',
       }),
     onSuccess: (record) => {
@@ -89,13 +90,13 @@ export default function PayVisitScreen() {
   const status = current?.status || '';
   const isFinal = FINAL_STATUSES.includes(status);
 
-  // Keep the local visit record in step with the payment result
+  // The backend mirrors the deposit status onto the visit; refresh the cached copy
   useEffect(() => {
-    if (!visitId || !status) return;
-    if (status === 'COMPLETED') mockDomainStore.setVisitPaymentStatus(visitId, 'completed');
-    if (status === 'FAILED' || status === 'REJECTED')
-      mockDomainStore.setVisitPaymentStatus(visitId, 'failed');
-  }, [status, visitId]);
+    if (!visitId || !isFinal) return;
+    queryClient.invalidateQueries({ queryKey: ['visit-details', visitId] });
+    queryClient.invalidateQueries({ queryKey: ['patient-visits'] });
+    queryClient.invalidateQueries({ queryKey: ['patient-dashboard'] });
+  }, [isFinal, visitId, queryClient]);
 
   const configMessage = configQuery.data?.message;
   const notEnabled = configQuery.data?.enabled === false;

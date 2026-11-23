@@ -12,7 +12,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
 import { THEME } from '../../constants/theme';
 import { useAuthStore } from '../../stores/authStore';
-import { mockDomainStore } from '../../mock/mockDomainStore';
+import { notificationService } from '../../services/api';
 import { Card } from '../../components/ui/Card';
 
 export default function NotificationsScreen() {
@@ -20,13 +20,17 @@ export default function NotificationsScreen() {
 
   const { data: notifications = [], refetch } = useQuery({
     queryKey: ['notifications', currentUser?.id],
-    queryFn: () => mockDomainStore.getNotificationsForUser(currentUser?.id || ''),
+    queryFn: () => notificationService.getAll(),
     enabled: !!currentUser,
   });
 
-  const handleNotificationPress = (notif: any) => {
-    mockDomainStore.markNotificationAsRead(notif.id);
-    refetch();
+  const handleNotificationPress = async (notif: any) => {
+    try {
+      await notificationService.markRead(notif.id);
+      refetch();
+    } catch {
+      // A failed read-receipt must not block navigation
+    }
 
     if (notif.referenceId) {
       if (notif.type === 'result_ready') {

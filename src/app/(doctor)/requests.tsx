@@ -19,12 +19,14 @@ import { Button } from '../../components/ui/Button';
 import { InputField } from '../../components/ui/InputField';
 import { VisitRequest } from '../../types/domain';
 
+const tomorrowISO = () => new Date(Date.now() + 86_400_000).toISOString().slice(0, 10);
+
 export default function DoctorRequestsScreen() {
   const { currentUser, doctorProfile } = useAuthStore();
   const [selectedVisit, setSelectedVisit] = useState<VisitRequest | null>(null);
   const [modalMode, setModalMode] = useState<'none' | 'decline' | 'alternative'>('none');
   const [declineReason, setDeclineReason] = useState('');
-  const [altDate, setAltDate] = useState('2026-10-23');
+  const [altDate, setAltDate] = useState(tomorrowISO);
   const [altTime, setAltTime] = useState('11:00');
   const [altNote, setAltNote] = useState('');
   const [submitting, setSubmitting] = useState(false);

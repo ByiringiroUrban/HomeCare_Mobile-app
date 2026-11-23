@@ -18,8 +18,7 @@ import type { ComponentProps } from 'react';
 import { THEME, COUNTRY_LIST } from '../../constants/theme';
 import { formatMoney } from '../../utils/money';
 import { useAuthStore } from '../../stores/authStore';
-import { adminService } from '../../services/api';
-import { mockDomainStore } from '../../mock/mockDomainStore';
+import { adminService, metaService } from '../../services/api';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 
@@ -59,7 +58,7 @@ function IconWell({
 }
 
 export default function AdminConsoleScreen() {
-  const { logout, resetDemoData } = useAuthStore();
+  const { logout } = useAuthStore();
   const [activeTab, setActiveTab] = useState<TabType>('metrics');
   const [doctorFilter, setDoctorFilter] = useState<DoctorFilterType>('all');
   const [complaintFilter, setComplaintFilter] = useState<ComplaintFilterType>('all');
@@ -83,6 +82,11 @@ export default function AdminConsoleScreen() {
   const { data: auditLogs = [], refetch: refetchAudit } = useQuery({
     queryKey: ['admin-audit'],
     queryFn: () => adminService.getAuditLogs(),
+  });
+
+  const { data: config } = useQuery({
+    queryKey: ['platform-config'],
+    queryFn: () => metaService.getConfig(),
   });
 
   const onRefresh = async () => {
@@ -115,12 +119,6 @@ export default function AdminConsoleScreen() {
     }
   };
 
-  const handleResetDemo = () => {
-    resetDemoData();
-    onRefresh();
-    Alert.alert('Data Reset', 'Demo data has been restored to default state.');
-  };
-
   const filteredDoctors = doctors.filter((d) => {
     if (doctorFilter === 'all') return true;
     return d.verificationStatus === doctorFilter;
@@ -151,9 +149,6 @@ export default function AdminConsoleScreen() {
             resizeMode="contain"
           />
           <View style={styles.brandActions}>
-            <Pressable style={styles.iconBtn} onPress={handleResetDemo}>
-              <Ionicons name="refresh-outline" size={20} color={THEME.colors.textPrimary} />
-            </Pressable>
             <Pressable
               style={styles.iconBtn}
               onPress={() => {
@@ -411,7 +406,8 @@ export default function AdminConsoleScreen() {
                 <IconWell name="location-sharp" size={28} iconSize={14} />
                 <Text style={styles.configLabel}>Markets</Text>
                 <Text style={styles.configValue}>
-                  {mockDomainStore.platformConfig.coverageDistricts.length} coverage districts in 6 countries
+                  {config?.coverageDistricts?.length || 0} coverage districts in {COUNTRY_LIST.length}{' '}
+                  countries
                 </Text>
               </View>
 
@@ -419,7 +415,8 @@ export default function AdminConsoleScreen() {
                 <IconWell name="car-outline" size={28} iconSize={14} />
                 <Text style={styles.configLabel}>Travel Fee</Text>
                 <Text style={styles.configValue}>
-                  {formatMoney(mockDomainStore.platformConfig.baseTravelFeeRwf, 'RWF')} Rwanda baseline
+                  {formatMoney(config?.baseTravelFee || 0, config?.defaultCurrency || 'RWF')} base travel
+                  fee
                 </Text>
               </View>
 
@@ -433,9 +430,9 @@ export default function AdminConsoleScreen() {
                 />
                 <Text style={styles.configLabel}>Emergency</Text>
                 <Text style={[styles.configValue, { color: THEME.colors.error }]}>
-                  {Object.entries(mockDomainStore.platformConfig.emergencyPhones)
+                  {Object.entries(config?.emergencyPhones || {})
                     .map(([code, phone]) => `${code} ${phone}`)
-                    .join(' · ')}
+                    .join(' · ') || 'Not configured'}
                 </Text>
               </View>
 
@@ -500,7 +497,7 @@ export default function AdminConsoleScreen() {
               <Card style={styles.emptyCard}>
                 <IconWell name="search-outline" size={48} iconSize={24} color={THEME.colors.textMuted} backgroundColor={THEME.colors.surfaceSubtle} />
                 <Text style={styles.emptyTitle}>No doctors match this filter</Text>
-                <Text style={styles.emptyText}>Switch filters or reset demo data to view registered clinicians.</Text>
+                <Text style={styles.emptyText}>Switch filters to view registered clinicians.</Text>
               </Card>
             ) : (
               filteredDoctors.map((d) => (
@@ -657,13 +654,15 @@ export default function AdminConsoleScreen() {
                   </View>
 
                   <View style={styles.complaintQuoteBox}>
-                    <Text style={styles.complaintDetails}>"{c.details}"</Text>
+                    <Text style={styles.complaintDetails}>&quot;{c.details}&quot;</Text>
                   </View>
 
                   <View style={styles.complaintMetaGrid}>
                     <View style={styles.complaintMetaItem}>
                       <Ionicons name="receipt-outline" size={13} color={THEME.colors.textMuted} />
-                      <Text style={styles.complaintMetaText}>Visit #{c.visitId}</Text>
+                      <Text style={styles.complaintMetaText}>
+                        {c.visitId ? `Visit #${c.visitId.slice(0, 8)}` : 'No visit linked'}
+                      </Text>
                     </View>
                     <View style={styles.complaintMetaItem}>
                       <Ionicons name="calendar-outline" size={13} color={THEME.colors.textMuted} />
@@ -754,20 +753,6 @@ export default function AdminConsoleScreen() {
           </Text>
         </View>
 
-        <Pressable
-          style={styles.fullResetBtn}
-          onPress={() => {
-            resetDemoData();
-            onRefresh();
-            Alert.alert(
-              'Environment Restored',
-              'All platform fixtures, mock doctors, visits, and clinical records have been reset to baseline.'
-            );
-          }}
-        >
-          <Ionicons name="refresh-outline" size={16} color={THEME.colors.primary} />
-          <Text style={styles.fullResetBtnText}>Reset demo to baseline</Text>
-        </Pressable>
       </ScrollView>
     </SafeAreaView>
   );

@@ -19,7 +19,7 @@ const queryClient = new QueryClient({
 });
 
 function SessionBar() {
-  const { currentUser, logout, resetDemoData } = useAuthStore();
+  const { currentUser, logout } = useAuthStore();
 
   if (!currentUser) return null;
 
@@ -31,15 +31,6 @@ function SessionBar() {
         </Text>
       </View>
       <View style={styles.actions}>
-        <Pressable
-          onPress={() => {
-            resetDemoData();
-            alert('Demo data has been reset to default state.');
-          }}
-          style={styles.actionBtn}
-        >
-          <Text style={styles.actionText}>Reset</Text>
-        </Pressable>
         <Pressable
           onPress={() => {
             logout();

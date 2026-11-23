@@ -13,22 +13,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { THEME, getCountryConfig } from '../../../constants/theme';
 import { formatMoney, currencyOf } from '../../../utils/money';
 import { useAuthStore } from '../../../stores/authStore';
-import { patientService } from '../../../services/api';
+import { patientService, metaService } from '../../../services/api';
 import { InputField } from '../../../components/ui/InputField';
 import { Button } from '../../../components/ui/Button';
 import { Card } from '../../../components/ui/Card';
 import { PaymentMethod, AvailabilitySlot } from '../../../types/domain';
-
-const COMMON_SYMPTOMS = [
-  'Fever / Chills',
-  'Persistent Cough',
-  'Chest Heaviness',
-  'Severe Headache',
-  'Skin Rash / Itching',
-  'Abdominal Pain',
-  'Pediatric Illness',
-  'Fatigue / Weakness',
-];
 
 export default function BookVisitScreen() {
   const { doctorId } = useLocalSearchParams<{ doctorId: string }>();
@@ -40,25 +29,26 @@ export default function BookVisitScreen() {
     enabled: !!doctorId,
   });
 
+  const { data: config } = useQuery({
+    queryKey: ['platform-config'],
+    queryFn: () => metaService.getConfig(),
+  });
+
   const doctor = details?.doctor;
   const slots = details?.slots || [];
+  const commonSymptoms = config?.commonSymptoms || [];
 
   // Form State
   const [selectedSlotId, setSelectedSlotId] = useState<string>('');
-  const [selectedDate, setSelectedDate] = useState<string>('2026-10-22');
-  const [selectedTime, setSelectedTime] = useState<string>('09:00');
+  const [selectedDate, setSelectedDate] = useState<string>('');
+  const [selectedTime, setSelectedTime] = useState<string>('');
   const [conditionDescription, setConditionDescription] = useState<string>('');
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
-  const [hasAttachment, setHasAttachment] = useState<boolean>(false);
-  const [address, setAddress] = useState<string>(
-    patientProfile?.residenceAddress || 'KG 18 Ave, House 42, Kibagabaga'
-  );
-  const [district, setDistrict] = useState<string>(patientProfile?.district || 'Gasabo');
-  const [accessNotes, setAccessNotes] = useState<string>(
-    'Ring black gate bell. Security guard at entrance.'
-  );
+  const [address, setAddress] = useState<string>(patientProfile?.residenceAddress || '');
+  const [district, setDistrict] = useState<string>(patientProfile?.district || '');
+  const [accessNotes, setAccessNotes] = useState<string>('');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('momo');
-  const [momoNumber, setMomoNumber] = useState<string>(currentUser?.phone || '+250 788 000 000');
+  const [momoNumber, setMomoNumber] = useState<string>(currentUser?.phone || '');
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string>('');
 
@@ -76,15 +66,15 @@ export default function BookVisitScreen() {
     setSelectedTime(slot.startTime);
   };
 
-  const handleUseGpsPin = () => {
-    // Simulated GPS pin resolution around the specialist's service city
-    const market = getCountryConfig(doctor?.country);
-    setAddress(`${market.capitalCity} — GPS pin captured (house number to be confirmed)`);
-    setDistrict(doctor?.coverageDistricts[0] || market.districts[0]);
-    alert(`GPS pin recorded in ${market.capitalCity}.`);
-  };
-
   const handleSubmitBooking = async () => {
+    if (!doctor) {
+      setErrorMsg('The specialist profile is still loading. Please try again.');
+      return;
+    }
+    if (!selectedSlotId) {
+      setErrorMsg('Please select one of the doctor’s available time slots.');
+      return;
+    }
     if (!conditionDescription.trim()) {
       setErrorMsg('Please describe your symptoms or reason for the consultation.');
       return;
@@ -97,31 +87,24 @@ export default function BookVisitScreen() {
     setErrorMsg('');
     setSubmitting(true);
     try {
-      const consultationFee = doctor?.consultationFeeRwf || 25000;
-      const travelFee = doctor?.travelFeeRwf || 5000;
-      const total = consultationFee + travelFee;
-
       const visit = await patientService.createVisitRequest({
-        patientId: currentUser?.id || 'patient-101',
-        patientName: currentUser?.name || 'Diane Uwase',
-        patientPhone: currentUser?.phone || '+250 788 412 901',
-        doctorId: doctor?.userId || doctorId || '',
-        doctorName: doctor?.name || 'Dr. Eric Kayitare',
-        doctorSpecialty: doctor?.specialty || 'General Medicine',
+        patientId: currentUser?.id || '',
+        patientName: currentUser?.name || '',
+        patientPhone: currentUser?.phone || '',
+        doctorId: doctor.userId,
+        doctorName: doctor.name,
+        doctorSpecialty: doctor.specialty,
         slotId: selectedSlotId,
         scheduledDate: selectedDate,
         scheduledTime: selectedTime,
         conditionDescription: conditionDescription.trim(),
         commonSymptoms: selectedSymptoms,
-        attachmentUrls: hasAttachment
-          ? ['https://homecare.africa/uploads/sample-prior-prescription.jpg']
-          : [],
+        attachmentUrls: [],
         visitAddress: address.trim(),
         district,
-        country: doctor?.country || 'RW',
+        country: doctor.country || '',
         currency: currencyOf(doctor),
         accessInstructions: accessNotes.trim(),
-        coordinates: { latitude: -1.9366, longitude: 30.1287 },
         consultationFeeRwf: consultationFee,
         travelFeeRwf: travelFee,
         totalFeeRwf: total,
@@ -154,8 +137,8 @@ export default function BookVisitScreen() {
     }
   };
 
-  const consultationFee = doctor?.consultationFeeRwf || 25000;
-  const travelFee = doctor?.travelFeeRwf || 5000;
+  const consultationFee = doctor?.consultationFeeRwf ?? 0;
+  const travelFee = doctor?.travelFeeRwf ?? 0;
   const total = consultationFee + travelFee;
 
   return (
@@ -177,7 +160,7 @@ export default function BookVisitScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>1. Select Date & Available Time Slot</Text>
         <Text style={styles.sectionSubtitle}>
-          Choose from doctor’s verified open windows or choose default:
+          Select one of the doctor’s published availability windows.
         </Text>
 
         <View style={styles.slotList}>
@@ -202,16 +185,13 @@ export default function BookVisitScreen() {
                 );
               })
           ) : (
-            <Pressable
-              onPress={() => {
-                setSelectedDate('2026-10-22');
-                setSelectedTime('10:00');
-              }}
-              style={[styles.slotChip, styles.slotChipActive]}
-            >
-              <Text style={[styles.slotDate, styles.slotTextActive]}>2026-10-22</Text>
-              <Text style={[styles.slotTime, styles.slotTextActive]}>10:00 AM</Text>
-            </Pressable>
+            <View style={styles.noSlotsBox}>
+              <Ionicons name="calendar-outline" size={18} color={THEME.colors.textMuted} />
+              <Text style={styles.noSlotsText}>
+                This specialist has no open time slots right now. Please check back later or choose
+                another doctor.
+              </Text>
+            </View>
           )}
         </View>
       </View>
@@ -224,7 +204,7 @@ export default function BookVisitScreen() {
         </Text>
 
         <View style={styles.symptomsGrid}>
-          {COMMON_SYMPTOMS.map((sym) => {
+          {commonSymptoms.map((sym) => {
             const isSelected = selectedSymptoms.includes(sym);
             return (
               <Pressable
@@ -255,42 +235,11 @@ export default function BookVisitScreen() {
           onChangeText={setConditionDescription}
           multiline
         />
-
-        {/* Attachment simulation */}
-        <Pressable
-          style={styles.attachmentButton}
-          onPress={() => {
-            setHasAttachment(!hasAttachment);
-            alert(
-              hasAttachment
-                ? 'Sample report removed.'
-                : 'Prior prescription photo attached: sample-prior-prescription.jpg'
-            );
-          }}
-        >
-          <Ionicons
-            name={hasAttachment ? 'attach' : 'cloud-upload-outline'}
-            size={18}
-            color={THEME.colors.primaryDark}
-            style={{ marginRight: 8 }}
-          />
-          <Text style={styles.attachmentText}>
-            {hasAttachment
-              ? 'Attached: sample-prior-prescription.jpg (Tap to remove)'
-              : 'Optionally attach photo or prior lab report'}
-          </Text>
-        </Pressable>
       </View>
 
       {/* Step 5 & 6: Address & Access Instructions */}
       <View style={styles.section}>
-        <View style={styles.addressHeader}>
-          <Text style={styles.sectionTitle}>3. Residence Visit Address</Text>
-          <Pressable onPress={handleUseGpsPin} style={styles.gpsBtn}>
-            <Ionicons name="navigate-circle" size={14} color={THEME.colors.primaryDark} style={{ marginRight: 3 }} />
-            <Text style={styles.gpsBtnText}>Use GPS Pin</Text>
-          </Pressable>
-        </View>
+        <Text style={styles.sectionTitle}>3. Residence Visit Address</Text>
 
         <InputField
           label="Street Address / House Number *"
@@ -455,6 +404,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
+  },
+  noSlotsBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 4,
+  },
+  noSlotsText: {
+    flex: 1,
+    fontSize: 12,
+    color: THEME.colors.textMuted,
+    lineHeight: 18,
   },
   slotChip: {
     borderWidth: 1,

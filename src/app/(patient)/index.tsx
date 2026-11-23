@@ -60,7 +60,7 @@ export default function PatientHomeScreen() {
   // Recommended Specialists in the selected market
   const { data: doctors = [], refetch: refetchDoctors } = useQuery({
     queryKey: ['recommended-doctors', country.code],
-    queryFn: () => patientService.searchDoctors({ country: country.code, minRating: 4.7 }),
+    queryFn: () => patientService.searchDoctors({ country: country.code }),
   });
 
   const onRefresh = async () => {

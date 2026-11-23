@@ -174,8 +174,7 @@ export const APP_CONFIG = {
   tagline: 'Certified Doctor Home Visits Across East Africa',
   supportedCountries: COUNTRY_CODES,
   supportEmail: 'support@homecare.africa',
-  supportPhone: '+250 788 123 456',
-  demoOtpCode: '123456',
+
   coverageDistricts: ALL_DISTRICTS,
   defaultCountry: DEFAULT_COUNTRY,
   // Generic emergency disclaimer used when country is unknown

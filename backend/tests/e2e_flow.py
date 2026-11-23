@@ -22,7 +22,14 @@ import httpx
 from sqlalchemy import delete, select, update
 
 from app.db.session import AsyncSessionLocal, engine
-from app.models.domain import AvailabilitySlot, ConsultationRecord, Notification, Visit
+from app.models.domain import (
+    AvailabilitySlot,
+    Complaint,
+    ConsultationRecord,
+    Notification,
+    Review,
+    Visit,
+)
 from app.models.user import DoctorProfile, User
 
 PATIENT = ("diane.uwase@example.rw", "Password123!")
@@ -60,6 +67,8 @@ async def cleanup(email: str) -> None:
             return
         visits = (await db.execute(select(Visit.id).where(Visit.doctor_id == user.id))).scalars().all()
         if visits:
+            await db.execute(delete(Complaint).where(Complaint.visit_id.in_(visits)))
+            await db.execute(delete(Review).where(Review.visit_id.in_(visits)))
             await db.execute(delete(ConsultationRecord).where(ConsultationRecord.visit_id.in_(visits)))
             await db.execute(delete(Notification).where(Notification.reference_id.in_(visits)))
             await db.execute(delete(Visit).where(Visit.id.in_(visits)))
@@ -244,6 +253,76 @@ def main() -> int:
 
         notifications = client.get(f"{base}/notifications", headers=PH).json()
         check("patient received visit notifications", len(notifications) > 0, f"{len(notifications)} notifications")
+
+        # ---------- notification read state ----------
+        unread = next((n for n in notifications if not n["isRead"]), None)
+        if unread:
+            mark = client.post(f"{base}/notifications/{unread['id']}/read", headers=PH)
+            check("notification marked read", mark.status_code == 200, f"HTTP {mark.status_code}")
+            after = client.get(f"{base}/notifications", headers=PH).json()
+            check("read flag persisted",
+                  any(n["id"] == unread["id"] and n["isRead"] for n in after))
+            mark_all = client.post(f"{base}/notifications/read-all", headers=PH)
+            left = [n for n in client.get(f"{base}/notifications", headers=PH).json() if not n["isRead"]]
+            check("mark all notifications read", mark_all.status_code == 200 and not left,
+                  f"HTTP {mark_all.status_code}, {len(left)} unread")
+        else:
+            check("notification marked read", False, "no unread notification to test")
+
+        # ---------- doctor patient directory ----------
+        directory = client.get(f"{base}/doctor/patients", headers=DH).json()
+        check("doctor patient directory lists the patient",
+              any(p["userId"] == visit["patientId"] for p in directory), f"{len(directory)} patients")
+        patient_detail = client.get(f"{base}/doctor/patients/{visit['patientId']}", headers=DH)
+        check("doctor reads patient medical profile", patient_detail.status_code == 200,
+              f"HTTP {patient_detail.status_code} {patient_detail.text[:120]}")
+
+        # ---------- country filter + platform config ----------
+        rw_only = client.get(f"{base}/doctors", headers=PH, params={"country": "RW"}).json()
+        check("country filter returns only Rwandan doctors",
+              bool(rw_only) and all((d.get("country") or "").upper() == "RW" for d in rw_only),
+              f"{len(rw_only)} doctors")
+        config = client.get(f"{base}/meta/config")
+        check("platform config served from backend",
+              config.status_code == 200 and bool(config.json().get("platformName")),
+              f"HTTP {config.status_code}")
+
+        # ---------- complaints ----------
+        filed = client.post(
+            f"{base}/complaints", headers=PH,
+            json={"visitId": visit_id, "subject": "E2E complaint",
+                  "details": "Automated end-to-end complaint check."},
+        )
+        check("patient files complaint", filed.status_code == 201,
+              f"HTTP {filed.status_code} {filed.text[:120]}")
+        complaint_id = filed.json().get("id", "") if filed.status_code == 201 else ""
+        complaints = client.get(f"{base}/admin/complaints", headers=AH).json()
+        check("admin sees the filed complaint",
+              any(c["id"] == complaint_id for c in complaints), f"{len(complaints)} complaints")
+        resolved = client.post(
+            f"{base}/admin/complaints/{complaint_id}/resolve", headers=AH,
+            json={"resolutionNotes": "Reviewed and closed by E2E run."},
+        )
+        check("admin resolves complaint",
+              resolved.status_code == 200 and resolved.json().get("status") == "resolved",
+              f"HTTP {resolved.status_code} {resolved.text[:120]}")
+
+        # ---------- admin oversight ----------
+        admin_visits = client.get(f"{base}/admin/visits", headers=AH).json()
+        admin_visit = next((v for v in admin_visits if v["id"] == visit_id), None)
+        check("admin visit list includes the visit", admin_visit is not None,
+              f"{len(admin_visits)} visits")
+        check("visit carries its country", bool(admin_visit and admin_visit.get("country")),
+              f"country={admin_visit.get('country') if admin_visit else None}")
+        logs = client.get(f"{base}/admin/audit-logs", headers=AH)
+        check("audit log endpoint returns a list",
+              logs.status_code == 200 and isinstance(logs.json(), list), f"HTTP {logs.status_code}")
+        metrics = client.get(f"{base}/admin/metrics", headers=AH).json()
+        check("admin metrics reflect real visits and revenue",
+              metrics.get("totalVisits", 0) >= 1
+              and isinstance(metrics.get("revenueByCurrency"), dict)
+              and "avgRating" in metrics,
+              f"totalVisits={metrics.get('totalVisits')}")
 
         # ---------- cleanup ----------
     asyncio.run(cleanup(email))

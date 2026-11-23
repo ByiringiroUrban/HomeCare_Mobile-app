@@ -17,10 +17,11 @@ import { Button } from '../../components/ui/Button';
 import { InputField } from '../../components/ui/InputField';
 
 const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const todayISO = () => new Date().toISOString().slice(0, 10);
 
 export default function DoctorScheduleScreen() {
   const { currentUser, doctorProfile } = useAuthStore();
-  const [newDate, setNewDate] = useState('2026-10-23');
+  const [newDate, setNewDate] = useState(todayISO);
   const [startTime, setStartTime] = useState('14:00');
   const [endTime, setEndTime] = useState('15:00');
   const [addingSlot, setAddingSlot] = useState(false);

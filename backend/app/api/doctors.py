@@ -20,6 +20,7 @@ router = APIRouter()
 async def search_doctors(
     query: Optional[str] = None,
     specialty: Optional[str] = None,
+    country: Optional[str] = None,
     district: Optional[str] = None,
     language: Optional[str] = None,
     max_fee: Optional[int] = Query(None, alias="maxFee"),
@@ -44,6 +45,8 @@ async def search_doctors(
         ]
     if specialty and specialty != "All":
         doctors = [d for d in doctors if d["specialty"].lower() == specialty.lower()]
+    if country and country != "All":
+        doctors = [d for d in doctors if (d["country"] or "").upper() == country.upper()]
     if district and district != "All":
         doctors = [d for d in doctors if district in d["coverageDistricts"]]
     if language and language != "All":

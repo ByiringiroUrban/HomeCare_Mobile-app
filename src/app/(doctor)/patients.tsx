@@ -12,28 +12,17 @@ import { Ionicons } from '@expo/vector-icons';
 import { THEME } from '../../constants/theme';
 import { useAuthStore } from '../../stores/authStore';
 import { doctorService } from '../../services/api';
-import { mockDomainStore } from '../../mock/mockDomainStore';
 import { Card } from '../../components/ui/Card';
 
 export default function DoctorPatientsScreen() {
   const { currentUser } = useAuthStore();
 
-  const { data: visits = [] } = useQuery({
-    queryKey: ['doctor-visits', currentUser?.id],
-    queryFn: () => doctorService.getVisits(currentUser?.id || ''),
+  // The backend only returns patients who have a visit with this doctor
+  const { data: assignedPatients = [] } = useQuery({
+    queryKey: ['doctor-patients', currentUser?.id],
+    queryFn: () => doctorService.getPatients(),
     enabled: !!currentUser,
   });
-
-  // Extract unique patients assigned to this doctor
-  const uniquePatientIds = Array.from(new Set(visits.map((v) => v.patientId)));
-  const assignedPatients = uniquePatientIds
-    .map((pid) => {
-      const profile = mockDomainStore.getPatientProfile(pid);
-      const user = mockDomainStore.getUser(pid);
-      const patientVisits = visits.filter((v) => v.patientId === pid);
-      return { profile, user, patientVisits };
-    })
-    .filter((p) => p.user);
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -51,18 +40,18 @@ export default function DoctorPatientsScreen() {
           <Text style={styles.emptyText}>Patients who book visits with you will appear here.</Text>
         </Card>
       ) : (
-        assignedPatients.map(({ user, profile, patientVisits }) => (
-          <Card key={user?.id} style={styles.patientCard}>
+        assignedPatients.map((patient) => (
+          <Card key={patient.userId} style={styles.patientCard}>
             <View style={styles.patientHeader}>
               <View style={styles.avatar}>
-                <Text style={styles.avatarText}>{user?.name.charAt(0)}</Text>
+                <Text style={styles.avatarText}>{patient.name.charAt(0)}</Text>
               </View>
               <View style={styles.nameCol}>
-                <Text style={styles.name}>{user?.name}</Text>
+                <Text style={styles.name}>{patient.name}</Text>
                 <View style={styles.contactRow}>
                   <Ionicons name="call-outline" size={13} color={THEME.colors.textSecondary} />
                   <Text style={styles.contact}>
-                    {user?.phone} • {profile?.age || 30} yrs ({profile?.gender || 'N/A'})
+                    {patient.phone} • {patient.age || '—'} yrs ({patient.gender || 'N/A'})
                   </Text>
                 </View>
               </View>
@@ -72,25 +61,25 @@ export default function DoctorPatientsScreen() {
             <View style={styles.healthInfo}>
               <Text style={styles.healthRow}>
                 <Text style={styles.healthLabel}>Allergies: </Text>
-                {profile?.allergies.join(', ') || 'None reported'}
+                {patient.allergies.join(', ') || 'None reported'}
               </Text>
               <Text style={styles.healthRow}>
                 <Text style={styles.healthLabel}>Chronic Conditions: </Text>
-                {profile?.knownConditions.join(', ') || 'None reported'}
+                {patient.knownConditions.join(', ') || 'None reported'}
               </Text>
               <Text style={styles.healthRow}>
                 <Text style={styles.healthLabel}>Current Medications: </Text>
-                {profile?.currentMedication.join(', ') || 'None reported'}
+                {patient.currentMedication.join(', ') || 'None reported'}
               </Text>
               <Text style={styles.healthRow}>
                 <Text style={styles.healthLabel}>Residence: </Text>
-                {profile?.residenceAddress} ({profile?.district})
+                {patient.residenceAddress || 'Not provided'} ({patient.district || '—'})
               </Text>
             </View>
 
             <View style={styles.visitsBadge}>
               <Text style={styles.visitsBadgeText}>
-                {patientVisits.length} consultation{patientVisits.length > 1 ? 's' : ''} on record
+                {patient.visitCount} consultation{patient.visitCount === 1 ? '' : 's'} on record
               </Text>
             </View>
           </Card>

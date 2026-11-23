@@ -1,8 +1,7 @@
-// User Session Store with Zustand and Account Isolation
+// User Session Store (Zustand). Sessions are issued by the backend API.
 import { create } from 'zustand';
 import { User, PatientProfile, DoctorProfile } from '../types/domain';
 import { authService, patientService, doctorService, setApiToken } from '../services/api';
-import { mockDomainStore } from '../mock/mockDomainStore';
 
 interface AuthSessionState {
   currentUser: User | null;
@@ -13,12 +12,10 @@ interface AuthSessionState {
   error: string | null;
 
   // Actions
-  loginDemo: (role: 'patient1' | 'patient2' | 'doctor1' | 'doctor2' | 'admin') => Promise<User>;
   loginCustom: (identifier: string, password?: string) => Promise<User>;
   setSession: (user: User, token: string) => Promise<void>;
   logout: () => void;
   refreshProfile: () => Promise<void>;
-  resetDemoData: () => void;
 }
 
 export const useAuthStore = create<AuthSessionState>((set, get) => ({
@@ -29,38 +26,12 @@ export const useAuthStore = create<AuthSessionState>((set, get) => ({
   isLoading: false,
   error: null,
 
-  loginDemo: async (role) => {
-    set({ isLoading: true, error: null });
-    try {
-      const { user, token } = await authService.login('', role);
-      let pProfile: PatientProfile | null = null;
-      let dProfile: DoctorProfile | null = null;
-
-      if (user.role === 'patient') {
-        pProfile = await patientService.getProfile(user.id);
-      } else if (user.role === 'doctor') {
-        dProfile = await doctorService.getProfile(user.id);
-      }
-
-      setApiToken(token);
-      set({
-        currentUser: user,
-        patientProfile: pProfile,
-        doctorProfile: dProfile,
-        token,
-        isLoading: false,
-      });
-      return user;
-    } catch (err: any) {
-      set({ error: err.message || 'Login failed', isLoading: false });
-      throw err;
-    }
-  },
-
   loginCustom: async (identifier, password) => {
     set({ isLoading: true, error: null });
     try {
-      const { user, token } = await authService.login(identifier, password);
+      const { user, token } = await authService.login(identifier, password || '');
+      setApiToken(token);
+
       let pProfile: PatientProfile | null = null;
       let dProfile: DoctorProfile | null = null;
 
@@ -70,7 +41,6 @@ export const useAuthStore = create<AuthSessionState>((set, get) => ({
         dProfile = await doctorService.getProfile(user.id);
       }
 
-      setApiToken(token);
       set({
         currentUser: user,
         patientProfile: pProfile,
@@ -87,6 +57,8 @@ export const useAuthStore = create<AuthSessionState>((set, get) => ({
 
   setSession: async (user, token) => {
     // Used after OTP verification, where the backend already issued the token
+    setApiToken(token);
+
     let pProfile: PatientProfile | null = null;
     let dProfile: DoctorProfile | null = null;
 
@@ -96,7 +68,6 @@ export const useAuthStore = create<AuthSessionState>((set, get) => ({
       dProfile = await doctorService.getProfile(user.id);
     }
 
-    setApiToken(token);
     set({
       currentUser: user,
       patientProfile: pProfile,
@@ -128,10 +99,5 @@ export const useAuthStore = create<AuthSessionState>((set, get) => ({
       const dProfile = await doctorService.getProfile(user.id);
       set({ doctorProfile: dProfile });
     }
-  },
-
-  resetDemoData: () => {
-    mockDomainStore.resetToDefaults();
-    get().refreshProfile();
   },
 }));

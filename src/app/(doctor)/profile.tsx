@@ -16,7 +16,7 @@ import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 
 export default function DoctorProfileScreen() {
-  const { currentUser, doctorProfile, logout, resetDemoData } = useAuthStore();
+  const { currentUser, doctorProfile, logout } = useAuthStore();
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -86,15 +86,6 @@ export default function DoctorProfileScreen() {
 
       {/* Actions */}
       <View style={styles.actions}>
-        <Button
-          title="Reset Demo Data"
-          variant="secondary"
-          onPress={() => {
-            resetDemoData();
-            alert('Demo domain data restored to initial state.');
-          }}
-          style={{ marginBottom: 10 }}
-        />
         <Button
           title="Sign Out"
           variant="danger"

@@ -19,7 +19,7 @@ import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 
 export default function PatientProfileScreen() {
-  const { currentUser, patientProfile, logout, resetDemoData, refreshProfile } = useAuthStore();
+  const { currentUser, patientProfile, logout, refreshProfile } = useAuthStore();
   const country = useCountry();
   const setCountry = useLocaleStore((state) => state.setCountry);
 
@@ -143,7 +143,7 @@ export default function PatientProfileScreen() {
         <View style={styles.emergencyPhoneRow}>
           <Ionicons name="call-outline" size={14} color={THEME.colors.textSecondary} />
           <Text style={styles.emergencyPhone}>
-            {patientProfile?.emergencyContact.phone || '+250 788 000 000'}
+            {patientProfile?.emergencyContact.phone || 'Not provided'}
           </Text>
         </View>
       </Card>
@@ -172,18 +172,8 @@ export default function PatientProfileScreen() {
         </View>
       </View>
 
-      {/* Demo Controls & Sign Out */}
+      {/* Sign Out */}
       <View style={styles.footerSection}>
-        <Button
-          title="Reset Demo Data to Initial State"
-          variant="secondary"
-          onPress={() => {
-            resetDemoData();
-            alert('Demo database reset to default fixtures.');
-          }}
-          style={{ marginBottom: 10 }}
-        />
-
         <Button
           title="Sign Out"
           variant="danger"

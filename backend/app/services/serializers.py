@@ -147,6 +147,7 @@ def visit_out(visit: Visit) -> dict:
         "doctorName": doctor.name if doctor else "",
         "doctorPhone": doctor.phone if doctor else "",
         "doctorSpecialty": doctor_profile.specialty if doctor_profile else "",
+        "country": (doctor_profile.country if doctor_profile else "") or "",
         "slotId": visit.slot_id or "",
         "scheduledDate": visit.scheduled_date,
         "scheduledTime": visit.scheduled_time,

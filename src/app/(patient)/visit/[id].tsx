@@ -35,7 +35,7 @@ export default function VisitDetailScreen() {
     queryKey: ['visit-details', id],
     queryFn: () => patientService.getVisitDetails(id || ''),
     enabled: !!id,
-    refetchInterval: 3000, // Poll state transitions in demo
+    refetchInterval: 3000, // Keep the live visit status fresh
   });
 
   if (!visit) {
@@ -94,8 +94,8 @@ export default function VisitDetailScreen() {
     setActionLoading(true);
     await patientService.submitReview({
       visitId: visit.id,
-      patientId: currentUser?.id || 'patient-101',
-      patientName: currentUser?.name || 'Diane Uwase',
+      patientId: currentUser?.id || '',
+      patientName: currentUser?.name || '',
       doctorId: visit.doctorId,
       rating,
       comment: reviewComment.trim(),
@@ -113,7 +113,7 @@ export default function VisitDetailScreen() {
     setActionLoading(true);
     await patientService.submitComplaint({
       visitId: visit.id,
-      reporterUserId: currentUser?.id || 'patient-101',
+      reporterUserId: currentUser?.id || '',
       reporterRole: 'patient',
       subject: complaintSubject.trim(),
       details: complaintDetails.trim(),
@@ -176,7 +176,7 @@ export default function VisitDetailScreen() {
             </Text>
           </View>
           {visit.alternativeProposalNote && (
-            <Text style={styles.altNote}>Note: "{visit.alternativeProposalNote}"</Text>
+            <Text style={styles.altNote}>Note: &quot;{visit.alternativeProposalNote}&quot;</Text>
           )}
 
           <View style={styles.altActionRow}>

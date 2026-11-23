@@ -1,5 +1,5 @@
 // Ultra-premium animated splash & branded preloader for HomeCare East Africa
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -24,19 +24,20 @@ export const SplashPreloader: React.FC<SplashPreloaderProps> = ({
   onFinish,
   minDurationMs = 2400,
 }) => {
-  // Animation drivers
-  const logoScale = useRef(new Animated.Value(0.82)).current;
-  const logoOpacity = useRef(new Animated.Value(0)).current;
-  const pulseRing1 = useRef(new Animated.Value(0.4)).current;
-  const pulseRing1Opacity = useRef(new Animated.Value(0.7)).current;
-  const pulseRing2 = useRef(new Animated.Value(0.2)).current;
-  const pulseRing2Opacity = useRef(new Animated.Value(0.5)).current;
+  // Animation drivers (stable instances without reading a ref during render)
+  const [logoScale] = useState(() => new Animated.Value(0.82));
+  const [logoOpacity] = useState(() => new Animated.Value(0));
+  const [pulseRing1] = useState(() => new Animated.Value(0.4));
+  const [pulseRing1Opacity] = useState(() => new Animated.Value(0.7));
+  const [pulseRing2] = useState(() => new Animated.Value(0.2));
+  const [pulseRing2Opacity] = useState(() => new Animated.Value(0.5));
 
-  const contentTranslateY = useRef(new Animated.Value(24)).current;
-  const contentOpacity = useRef(new Animated.Value(0)).current;
+  const [contentTranslateY] = useState(() => new Animated.Value(24));
+  const [contentOpacity] = useState(() => new Animated.Value(0));
 
-  const progressAnim = useRef(new Animated.Value(0)).current;
-  const containerFade = useRef(new Animated.Value(1)).current;
+  const [progressAnim] = useState(() => new Animated.Value(0));
+  const [containerFade] = useState(() => new Animated.Value(1));
+  const finished = useRef(false);
 
   useEffect(() => {
     // 1. Entrance animation for Logo & Content
@@ -138,21 +139,30 @@ export const SplashPreloader: React.FC<SplashPreloaderProps> = ({
 
     loopPulsing.start();
 
-    // 3. Smooth fade out when completed
+    // 3. Smooth fade out when completed. The opacity uses the JS driver so the
+    //    fade also runs on web, and a fallback timer guarantees the overlay is
+    //    removed even if the animation never reports completion.
+    const finish = () => {
+      if (finished.current) return;
+      finished.current = true;
+      loopPulsing.stop();
+      if (onFinish) onFinish();
+    };
+
+    let fallbackTimer: ReturnType<typeof setTimeout> | undefined;
     const timer = setTimeout(() => {
       Animated.timing(containerFade, {
         toValue: 0,
         duration: 450,
         easing: Easing.inOut(Easing.quad),
-        useNativeDriver: true,
-      }).start(() => {
-        loopPulsing.stop();
-        if (onFinish) onFinish();
-      });
+        useNativeDriver: false,
+      }).start(finish);
+      fallbackTimer = setTimeout(finish, 900);
     }, minDurationMs);
 
     return () => {
       clearTimeout(timer);
+      if (fallbackTimer) clearTimeout(fallbackTimer);
       loopPulsing.stop();
     };
   }, []);
